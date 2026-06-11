@@ -1,0 +1,178 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Inter:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&family=Noto+Serif+Bengali:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Cormorant Garamond", "Noto Serif Bengali", "Playfair Display", Georgia, serif;
+  --font-sans: "Inter", "Manrope", system-ui, sans-serif;
+  --font-display: "Playfair Display", "Noto Serif Bengali", serif;
+  
+  --color-brand-bg: #F7F2EA;
+  --color-brand-charcoal: #2D2A26;
+  --color-brand-terracotta: #C46E4E;
+  --color-brand-olive: #6A7450;
+  --color-brand-clay: #B8A189;
+  --color-brand-beige: #E9DFC9;
+
+  --animate-fade-up: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-draw: drawLine 1.5s ease-out forwards;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes drawLine {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Custom Base styles */
+body {
+  background-color: #F7F2EA;
+  color: #2D2A26;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Handmade Paper / Soft Fine Grain Texture */
+.handmade-grain::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  opacity: 0.045;
+  pointer-events: none;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Better Scrolling experience */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom transitions and scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F7F2EA;
+}
+::-webkit-scrollbar-thumb {
+  background: #C46E4E;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #6A7450;
+}
+
+/* Elegant visual adjustments */
+.text-justify-custom {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+/* Custom ceramic blur shadow, organic styling */
+.ceramic-card {
+  background-color: rgba(247, 242, 234, 0.4);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(184, 161, 137, 0.2);
+}
+
+.organic-mask-1 {
+  border-radius: 40% 60% 65% 35% / 40% 45% 55% 60%;
+}
+
+.organic-mask-2 {
+  border-radius: 50% 50% 30% 70% / 50% 60% 40% 50%;
+}
+
+.organic-mask-3 {
+  border-radius: 60% 40% 70% 30% / 50% 30% 70% 50%;
+}
+
+/* Circular / Physical Orbit keyframes for Watermarked background Alpanas & slow settings spin */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes physicalOrbit {
+  0% {
+    transform: rotate(0deg) translate(0px, 0px) rotate(0deg);
+  }
+  25% {
+    transform: rotate(90deg) translate(25px, -25px) rotate(-90deg);
+  }
+  50% {
+    transform: rotate(180deg) translate(0px, -50px) rotate(-180deg);
+  }
+  75% {
+    transform: rotate(270deg) translate(-25px, -25px) rotate(-270deg);
+  }
+  100% {
+    transform: rotate(360deg) translate(0px, 0px) rotate(-360deg);
+  }
+}
+
+@keyframes physicalOrbitReverse {
+  0% {
+    transform: rotate(360deg) translate(0px, 0px) rotate(-360deg);
+  }
+  25% {
+    transform: rotate(270deg) translate(-30px, 30px) rotate(-270deg);
+  }
+  50% {
+    transform: rotate(180deg) translate(0px, 60px) rotate(-180deg);
+  }
+  75% {
+    transform: rotate(90deg) translate(30px, 30px) rotate(-90deg);
+  }
+  100% {
+    transform: rotate(0deg) translate(0px, 0px) rotate(0deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 15s linear infinite;
+}
+
+.animate-alpana-orbit-left {
+  animation: physicalOrbit 48s linear infinite;
+  will-change: transform;
+}
+
+.animate-alpana-orbit-right {
+  animation: physicalOrbitReverse 64s linear infinite;
+  will-change: transform;
+}
+
+/* Smooth Scrolling Enhancements & Hardware Acceleration hooks */
+img, button, svg, div {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  transition-duration: 400ms;
+}
+
+.will-change-transform {
+  will-change: transform, opacity;
+}
+

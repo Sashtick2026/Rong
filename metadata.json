@@ -1,0 +1,6 @@
+{
+  "name": "Rong",
+  "description": "Heritage. Handmade. Sustainable. A premium digital heritage journal and experiential showcase of handcrafted Bangladeshi lifestyle products.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

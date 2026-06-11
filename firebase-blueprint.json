@@ -1,0 +1,174 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role-based rights",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["customer", "admin", "superAdmin"] },
+        "createdAt": { "type": "string" },
+        "lastLogin": { "type": "string" }
+      },
+      "required": ["uid", "name", "email", "role"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Premium heritage craft product details managed dynamically",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "shortDescription": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "discountPrice": { "type": "number" },
+        "category": { "type": "string" },
+        "collection": { "type": "string" },
+        "mainImage": { "type": "string" },
+        "galleryImages": { "type": "array" },
+        "stock": { "type": "number" },
+        "featured": { "type": "boolean" },
+        "status": { "type": "string" },
+        "tags": { "type": "array" },
+        "seoTitle": { "type": "string" },
+        "seoDescription": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["productId", "title", "price", "mainImage"]
+    },
+    "Collection": {
+      "title": "Collection",
+      "description": "Traditional design collections grouping products dynamically",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "description": { "type": "string" },
+        "bannerImageUrl": { "type": "string" },
+        "featured": { "type": "boolean" }
+      },
+      "required": ["id", "title"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer purchase receipts and processing state",
+      "type": "object",
+      "properties": {
+        "orderId": { "type": "string" },
+        "customerId": { "type": "string" },
+        "products": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "shipping": { "type": "number" },
+        "total": { "type": "number" },
+        "paymentStatus": { "type": "string" },
+        "orderStatus": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["orderId", "customerId", "products", "total"]
+    },
+    "PaymentVerification": {
+      "title": "Payment Verification",
+      "description": "Verification data for bKash transactions matched to active orders",
+      "type": "object",
+      "properties": {
+        "verificationId": { "type": "string" },
+        "orderId": { "type": "string" },
+        "transactionId": { "type": "string" },
+        "senderNumber": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string" },
+        "submittedAt": { "type": "string" },
+        "verifiedAt": { "type": "string" },
+        "verifiedBy": { "type": "string" }
+      },
+      "required": ["verificationId", "orderId", "transactionId"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Admin real-time notification warnings for transactions and stocks",
+      "type": "object",
+      "properties": {
+        "notificationId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "role": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["notificationId", "title", "message"]
+    },
+    "JournalPost": {
+      "title": "Journal Post",
+      "description": "Dynamic narrative articles in Bengal heritage",
+      "type": "object",
+      "properties": {
+        "postId": { "type": "string" },
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "content": { "type": "string" },
+        "coverImageUrl": { "type": "string" },
+        "published": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["postId", "title"]
+    },
+    "SiteSettings": {
+      "title": "Site Settings",
+      "description": "General settings configurations for logo, dynamic address or footer",
+      "type": "object",
+      "properties": {
+        "siteName": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "faviconUrl": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "facebook": { "type": "string" },
+        "instagram": { "type": "string" },
+        "youtube": { "type": "string" },
+        "whatsapp": { "type": "string" }
+      },
+      "required": ["siteName"]
+    }
+  },
+  "firestore": {
+    "users": {
+      "schema": "User",
+      "description": "User profiles under authentication management"
+    },
+    "products": {
+      "schema": "Product",
+      "description": "Dynamic catalogue of handloom silk, jewellery and accessories"
+    },
+    "collections": {
+      "schema": "Collection",
+      "description": "Loom & Soil Curated design lists containing descriptive tags"
+    },
+    "orders": {
+      "schema": "Order",
+      "description": "Active purchase queues and checkout receipts"
+    },
+    "paymentVerification": {
+      "schema": "PaymentVerification",
+      "description": "Mobile transaction certificates for manually audited Bkash numbers"
+    },
+    "notifications": {
+      "schema": "Notification",
+      "description": "Aggregated real-time warnings and system telemetry alerts for administrators"
+    },
+    "journalPosts": {
+      "schema": "JournalPost",
+      "description": "Craft, Loom and Pottery narrative blog articles"
+    },
+    "siteSettings": {
+      "schema": "SiteSettings",
+      "description": "Website-wide CMS, contact values, footer paragraphs, and gateway payment settings"
+    }
+  }
+}
