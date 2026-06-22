@@ -114,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
                   className="flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-brand-beige/40 text-brand-charcoal/80 stroke-[1.5] transition-all duration-300 font-semibold"
                 >
                   <img
-                    src={currentUser.profileImage || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=150'}
+                    src={currentUser.profileImage || 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png'}
                     alt=""
                     className="w-7 h-7 rounded-full object-cover border border-brand-clay/15 shrink-0"
                   />

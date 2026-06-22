@@ -25,30 +25,10 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
   const [email, setEmail] = useState(currentUser.email);
   const [phone, setPhone] = useState(currentUser.phone || '');
   const [address, setAddress] = useState(currentUser.address || '');
-  const [profileImage, setProfileImage] = useState(currentUser.profileImage || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=150');
+  const [profileImage, setProfileImage] = useState('https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png');
   
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 2 * 1024 * 1024) {
-      triggerToast('Security Limit: Please select an image under 2MB.');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string;
-      if (base64) {
-        setProfileImage(base64);
-        triggerToast('Local portrait staged. Press "Save Coordinates" below to persist.');
-      }
-    };
-    reader.readAsDataURL(file);
-  };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,36 +150,6 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
             <p className="text-[10px] text-brand-clay select-none mt-2 font-mono">
               Coordinates listed since: {new Date(currentUser.createdAt).toLocaleDateString()}
             </p>
-          </div>
-
-          {/* Local file upload card */}
-          <div className="bg-brand-bg border border-brand-clay/15 rounded-2xl p-5 shadow-sm space-y-4 text-center">
-            <h4 className="font-serif text-sm font-semibold text-brand-charcoal border-b border-brand-clay/10 pb-2">
-              Exchange Profile Photo
-            </h4>
-            
-            <p className="text-[11px] text-brand-clay leading-relaxed">
-              Upload a snapshot file directly from your local computer storage to update your verified curator portrait.
-            </p>
-
-            <div className="pt-2">
-              <label 
-                htmlFor="file-portrait-upload"
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-brand-charcoal hover:bg-brand-olive text-brand-bg text-[10px] font-bold tracking-widest uppercase rounded-xl cursor-pointer shadow-sm transition-all duration-300"
-              >
-                <RefreshCcw className="w-3.5 h-3.5" />
-                <span>Upload Local File</span>
-              </label>
-              
-              <input 
-                type="file" 
-                id="file-portrait-upload"
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-              <p className="text-[8px] text-brand-clay font-mono mt-2 uppercase">PNG, JPG, or WEBP (MAX 2MB)</p>
-            </div>
           </div>
         </div>
 

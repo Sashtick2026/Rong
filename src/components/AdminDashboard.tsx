@@ -215,7 +215,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onL
         {/* User Info Badge */}
         <div className="p-4 border-b border-[#3E3A36] bg-[#24211F] flex items-center gap-3">
           <img 
-            src={currentUser.profileImage || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=150'} 
+            src={currentUser.profileImage || 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png'} 
             alt="" 
             className="w-10 h-10 rounded-full object-cover border border-[#4E4A45]"
           />
@@ -2974,7 +2974,7 @@ const SuperAdminsAccessDashboard: React.FC<SuperAdminProps> = ({ users, currentU
                 <tr key={u.uid} className="hover:bg-brand-beige/10 transition-colors">
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-2.5">
-                      <img src={u.profileImage || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=150"} className="w-8 h-8 rounded-full object-cover border border-brand-clay/15" />
+                      <img src={u.profileImage || "https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png"} className="w-8 h-8 rounded-full object-cover border border-brand-clay/15" />
                       <div>
                         <span className="font-bold block">{u.name}</span>
                         <span className="text-[10px] text-brand-clay block mt-0.5">{u.email}</span>

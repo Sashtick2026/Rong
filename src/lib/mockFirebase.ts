@@ -203,7 +203,7 @@ const initialUsers: UserProfile[] = [
     role: 'superAdmin',
     createdAt: '2026-01-10T12:00:00Z',
     updatedAt: '2026-06-10T03:00:00Z',
-    profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
+    profileImage: 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
     status: 'active',
     phone: '+880 1712 345678',
     address: 'Gulshan-2, Dhaka',
@@ -215,7 +215,7 @@ const initialUsers: UserProfile[] = [
     role: 'admin',
     createdAt: '2026-02-15T09:30:00Z',
     updatedAt: '2026-06-08T11:20:00Z',
-    profileImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop',
+    profileImage: 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
     status: 'active',
     phone: '+880 1819 987654',
     address: 'Banani, Dhaka',
@@ -227,7 +227,7 @@ const initialUsers: UserProfile[] = [
     role: 'customer',
     createdAt: '2026-04-01T15:22:00Z',
     updatedAt: '2026-04-01T15:22:00Z',
-    profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
+    profileImage: 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
     status: 'active',
     phone: '+880 1552 443322',
     address: 'Dhanmondi, Dhaka',
@@ -959,6 +959,7 @@ onAuthStateChanged(auth, (firebaseUser) => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         status: 'active',
+        profileImage: 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
       };
     }
     
@@ -994,6 +995,7 @@ onAuthStateChanged(auth, (firebaseUser) => {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           status: 'active',
+          profileImage: 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
         };
         setDoc(docRef, profile).catch(() => {});
         currentUserProfile = profile;
@@ -1089,6 +1091,7 @@ export const firebaseAuth = {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           status: 'active',
+          profileImage: 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
         };
         if (!offlineFallback) {
           try {
@@ -1133,6 +1136,7 @@ export const firebaseAuth = {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         status: 'active',
+        profileImage: 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
       };
       await setDoc(doc(db, 'users', cred.user.uid), profile);
 
@@ -1197,6 +1201,7 @@ export const firebaseAuth = {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         status: 'active',
+        profileImage: 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
       };
       await setDoc(doc(db, 'users', cred.user.uid), profile);
 
@@ -1523,8 +1528,17 @@ export const firestore = {
   },
   updateUserProfile: async (uid: string, fields: Partial<UserProfile>): Promise<void> => {
     try {
+      // Remove undefined keys to prevent Firestore unsupported field value errors
+      const sanitizedFields: any = {};
+      Object.keys(fields).forEach((key) => {
+        const val = (fields as any)[key];
+        if (val !== undefined) {
+          sanitizedFields[key] = val;
+        }
+      });
+
       await updateDoc(doc(db, 'users', uid), { 
-        ...fields, 
+        ...sanitizedFields, 
         updatedAt: new Date().toISOString() 
       });
     } catch (err) {
