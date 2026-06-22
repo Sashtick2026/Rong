@@ -81,4 +81,16 @@ export interface Testimonial {
   role: string;
   quote: string;
   location: string;
+  approved?: boolean;
+  createdAt?: string;
+}
+
+export interface CommunitySnap {
+  id: string;
+  title: string;
+  location: string;
+  img: string;
+  approved: boolean;
+  createdAt?: string;
+  submittedBy?: string;
 }

@@ -1,7 +1,8 @@
 import React from 'react';
-import { X, ShoppingBag, Eye, Heart, BookOpen, Compass } from 'lucide-react';
+import { X, ShoppingBag, Eye, BookOpen, Compass } from 'lucide-react';
 import { Product } from '../types';
 import { motion } from 'motion/react';
+import { AnimatedHeart } from './AnimatedHeart';
 
 interface QuickViewModalProps {
   product: Product | null;
@@ -53,7 +54,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
         {/* Thumbnail Image Left/Upper */}
         <div className="md:col-span-6 relative aspect-square md:aspect-auto md:h-full bg-brand-beige/25 border-b md:border-b-0 md:border-r border-brand-clay/10 overflow-hidden">
           <img
-            src={product.image}
+            src={product.image || null}
             alt={product.name}
             referrerPolicy="no-referrer"
             className="w-full h-full object-cover"
@@ -130,7 +131,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
               }`}
               aria-label="Add to wishlist"
             >
-              <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
+              <AnimatedHeart isWishlisted={isWishlisted} className="w-4 h-4" />
             </button>
           </div>
 

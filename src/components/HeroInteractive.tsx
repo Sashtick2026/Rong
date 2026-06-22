@@ -2,17 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'motion/react';
 import { ArrowRight, Compass, MapPin, Sparkles, ArrowLeftRight, Heart, ShoppingBag } from 'lucide-react';
 import { LeafBranch, CornerOrnament, AlpanaCircular } from './Ornaments';
-import { products } from '../data';
 import { Product } from '../types';
 import { firestore } from '../lib/mockFirebase';
 
 interface HeroInteractiveProps {
+  products: Product[];
   onOpenProductDetails: (product: Product) => void;
   onExploreShop: () => void;
   onExploreStory: () => void;
 }
 
 export const HeroInteractive: React.FC<HeroInteractiveProps> = ({
+  products,
   onOpenProductDetails,
   onExploreShop,
   onExploreStory,
@@ -32,12 +33,11 @@ export const HeroInteractive: React.FC<HeroInteractiveProps> = ({
   const lastPointerXRef = useRef<number>(0);
   const lastPointerTimeRef = useRef<number>(0);
 
-  // Filter our 5 beautiful showcase products
-  const slidingProducts = products.filter(p => 
-    ['saree-nilufer', 'jewelry-poromatshya', 'pot-kolsi-luxury', 'bangles-mukta', 'saree-boshonto'].includes(p.id)
-  ).slice(0, 5);
+  // Filter key showcase products based on dynamic site settings configurations
+  const sliderIds = settings?.sliderProductIds || ['saree-nilufer', 'jewelry-poromatshya', 'pot-kolsi-luxury', 'bangles-mukta', 'saree-boshonto'];
+  const slidingProducts = (products || []).filter(p => p && p.id && sliderIds.includes(p.id));
 
-  const displayProducts = slidingProducts.length >= 3 ? slidingProducts : products.slice(0, 5);
+  const displayProducts = (slidingProducts.length >= 3 ? slidingProducts : (products || []).slice(0, 5)).filter(p => p && p.id && p.image);
 
   // Continuous background circular rotation with high-performance momentum decay and lerp
   useEffect(() => {
@@ -180,16 +180,31 @@ export const HeroInteractive: React.FC<HeroInteractiveProps> = ({
   return (
     <section 
       ref={containerRef}
-      className="relative min-h-[92vh] flex flex-col justify-center overflow-hidden bg-brand-bg px-4 sm:px-6 lg:px-8 pt-8 pb-16 select-none"
+      className="relative min-h-[92vh] flex flex-col justify-center overflow-hidden bg-black px-4 sm:px-6 lg:px-8 pt-8 pb-16 select-none"
     >
+      {/* Immersive Cinematic Background Video Layer */}
+      <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <video 
+          src="https://cdn.discordapp.com/attachments/1433397128155103307/1518495363756064799/Basic_Model-1782106795000.mp4?ex=6a3a2082&is=6a38cf02&hm=c5c1257a67f0f086271fc38bed460e2dc09e44d06ebbe0a0a8161285ee4578f8&"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover opacity-85"
+        />
+        {/* Dual gradients optimized for high contrast text readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/75 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/45" />
+      </div>
+
       {/* Visual Architectural Background Dividers */}
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-clay/15 to-transparent" />
-      <div className="absolute inset-y-0 left-12 w-px bg-brand-clay/5 hidden lg:block" />
-      <div className="absolute inset-y-0 right-12 w-px bg-brand-clay/5 hidden lg:block" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent z-10" />
+      <div className="absolute inset-y-0 left-12 w-px bg-white/5 hidden lg:block z-10" />
+      <div className="absolute inset-y-0 right-12 w-px bg-white/5 hidden lg:block z-10" />
       
       {/* Vintage Blueprint watermark background */}
-      <div className="absolute -top-12 -left-20 opacity-[0.02] pointer-events-none hidden xl:block">
-        <AlpanaCircular size={380} className="text-brand-clay" />
+      <div className="absolute -top-12 -left-20 opacity-[0.04] pointer-events-none hidden xl:block z-10">
+        <AlpanaCircular size={380} className="text-white" />
       </div>
 
       <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center relative z-10">
@@ -200,8 +215,8 @@ export const HeroInteractive: React.FC<HeroInteractiveProps> = ({
           className="lg:col-span-5 space-y-6 sm:space-y-8 text-left z-10"
         >
           <div className="space-y-3">
-            <h1 className="font-serif text-5xl sm:text-7xl font-semibold text-brand-charcoal tracking-tight leading-[1.08] overflow-hidden">
-              <span className="block">
+            <h1 className="font-serif text-5xl sm:text-7xl font-semibold text-white tracking-tight leading-[1.08] overflow-hidden">
+              <span className="block text-white">
                 {settings.heroTitleLine1 || 'Archived Loom.'}
               </span>
               <span className="block font-serif tracking-tight font-normal text-brand-terracotta italic ml-1">
@@ -210,7 +225,7 @@ export const HeroInteractive: React.FC<HeroInteractiveProps> = ({
             </h1>
           </div>
 
-          <p className="text-xs sm:text-base text-brand-charcoal/75 leading-relaxed max-w-md text-justify font-sans">
+          <p className="text-xs sm:text-base text-white/80 leading-relaxed max-w-md text-justify font-sans">
             {settings.heroDescription || 'Operating as a visual culture register, রঙ archives the handloom rhythms of Bangladesh. Combining slow, kiln-fired riverbed soil and botanically dyed yarns, each curated piece stands as an authentic monument to ancient aesthetic geometries.'}
           </p>
 
@@ -219,26 +234,26 @@ export const HeroInteractive: React.FC<HeroInteractiveProps> = ({
             <button
               id="hero-explore-shop-btn"
               onClick={onExploreShop}
-              className="group bg-brand-charcoal hover:bg-brand-terracotta text-brand-bg px-8 py-4 rounded-md text-xs font-bold tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2.5 shadow-md shadow-brand-charcoal/10 border border-transparent hover:border-brand-terracotta"
+              className="group bg-white hover:bg-brand-terracotta text-brand-charcoal hover:text-white px-8 py-4 rounded-md text-xs font-bold tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2.5 shadow-md shadow-black/30 border border-transparent hover:border-brand-terracotta"
             >
               <span>Explore Curation</span>
-              <ArrowRight className="w-4 h-4 text-brand-bg group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-4 h-4 text-brand-charcoal group-hover:text-white group-hover:translate-x-1 transition-all" />
             </button>
             
             <button
               id="hero-explore-story-btn"
               onClick={onExploreStory}
-              className="group border border-brand-clay/35 hover:border-brand-charcoal text-brand-charcoal hover:bg-brand-beige/25 px-8 py-4 rounded-md text-xs font-bold tracking-widest uppercase transition-colors duration-300 flex items-center justify-center gap-2"
+              className="group border border-white/35 hover:border-white text-white hover:bg-white/10 px-8 py-4 rounded-md text-xs font-bold tracking-widest uppercase transition-colors duration-300 flex items-center justify-center gap-2"
             >
               <span>Read Register</span>
-              <span className="w-5 h-5 rounded-full bg-brand-clay/15 group-hover:bg-brand-charcoal group-hover:text-brand-bg flex items-center justify-center text-brand-clay transition-all duration-300 font-mono text-[8px] font-bold">
+              <span className="w-5 h-5 rounded-full bg-white/10 group-hover:bg-white group-hover:text-brand-charcoal text-white/80 transition-all duration-300 flex items-center justify-center font-mono text-[8px] font-bold">
                 ঋ
               </span>
             </button>
           </div>
 
           {/* Removed Geographic Coordinates Seal info to make the design cleaner */}
-          <div className="pt-4 border-t border-brand-clay/10" />
+          <div className="pt-4 border-t border-white/10" />
         </motion.div>
 
         {/* Right Column: High-End 3D Orbital Carousel Slider */}
@@ -263,68 +278,100 @@ export const HeroInteractive: React.FC<HeroInteractiveProps> = ({
             className="absolute inset-0 w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing text-center select-none touch-pan-y"
             style={{ perspective: '800px', transformStyle: 'preserve-3d' }}
           >
-            {/* The 3D Cards */}
-            {displayProducts.map((product, idx) => {
-              const cardPos = getCardPositionStyles(idx, displayProducts.length);
-              
-              return (
-                <div
-                  key={product.id}
-                  style={cardPos}
-                  onPointerUp={(e) => {
-                    e.stopPropagation();
-                    handlePointerUp(e, product);
-                  }}
-                  className="absolute w-[220px] sm:w-[260px] bg-brand-bg border border-brand-clay/20 p-3 sm:p-4 rounded-xl shadow-xl transition-shadow duration-300 hover:shadow-2xl hover:border-brand-terracotta select-none"
-                >
-                  {/* Miniature archival tag line */}
-                  <div className="flex items-center justify-between border-b border-brand-clay/10 pb-2 mb-3">
-                    <span className="text-[8px] font-mono tracking-widest text-[#6A7450] uppercase font-bold">
-                      Atelier Register // {idx + 1}
-                    </span>
-                    <span className="text-[8px] font-mono text-brand-clay">
-                      [RANG-0{idx + 1}]
-                    </span>
-                  </div>
-
-                  {/* Photo Frame Container */}
-                  <div className="aspect-[3/4] overflow-hidden rounded-lg bg-brand-beige/25 relative border border-brand-clay/10 group-hover:scale-101 transition-all">
-                    <img 
-                      src={product.image} 
-                      alt={product.name} 
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover select-none pointer-events-none grayscale-[15%] group-hover:grayscale-0 transition-transform duration-1000"
-                    />
-                    
-                    {/* Floating mini currency and buy badges */}
-                    <div className="absolute bottom-2 left-2 bg-brand-bg/95 border border-brand-clay/20 px-2.5 py-1 rounded-md text-[9px] font-mono tracking-wider font-semibold text-brand-charcoal">
-                      ৳{product.price} BDT
-                    </div>
-                  </div>
-
-                  {/* Product Specification Title */}
-                  <div className="mt-3 px-1 text-left space-y-1">
-                    <h3 className="font-serif text-xs sm:text-sm font-semibold text-brand-charcoal line-clamp-1">
-                      {product.name}
-                    </h3>
-                    <p className="text-[10px] text-brand-olive font-serif italic line-clamp-1 mt-0.5">
-                      {product.banglaName}
-                    </p>
-                  </div>
-
-                  {/* Aesthetic Corner brackets on active face card */}
-                  <CornerOrnament position="top-left" className="m-0.5 text-brand-clay/30" />
-                  <CornerOrnament position="bottom-right" className="m-0.5 text-brand-clay/30" />
+            {/* The 3D Cards or Elegant Empty State */}
+            {displayProducts.length === 0 ? (
+              <div
+                className="absolute w-[280px] sm:w-[325px] bg-brand-bg border-2 border-double border-brand-clay/35 p-6 sm:p-7 rounded-2xl shadow-xl text-center flex flex-col justify-between items-center transition-all duration-500"
+                style={{ transform: 'translate3d(0px, 0px, 120px)' }}
+              >
+                <div className="w-full border-b border-brand-clay/10 pb-3 mb-4 flex justify-between items-center">
+                  <span className="text-[10px] font-mono tracking-widest text-[#6A7450] uppercase font-bold">
+                    Atelier Standard // Ready
+                  </span>
+                  <span className="text-[9px] font-mono text-brand-terracotta bg-brand-terracotta/5 px-2.5 py-0.5 rounded-full font-bold uppercase select-none">[Pristine Clean]</span>
                 </div>
-              );
-            })}
+                
+                <div className="my-4 space-y-4">
+                  <div className="w-14 h-14 rounded-full bg-brand-beige/55 border border-brand-clay/20 flex items-center justify-center mx-auto text-brand-terracotta shadow-xs">
+                    <Sparkles className="w-6 h-6 text-brand-terracotta animate-pulse" />
+                  </div>
+                  <h3 className="font-serif text-base font-bold text-brand-charcoal">Atelier Awaiting Showcase</h3>
+                  <p className="text-[11px] text-brand-charcoal/70 leading-relaxed max-w-xs mx-auto font-sans">
+                    Your database and sales logs are clean and empty. Log in to the Curator Portal to seed test archives or upload custom handloom sarees.
+                  </p>
+                </div>
+
+                <div className="w-full border-t border-brand-clay/10 pt-3 mt-4 text-[9px] font-mono text-brand-clay uppercase tracking-wider font-semibold">
+                  RANG BOUTIQUE • READY FOR DELIVERY
+                </div>
+
+                {/* Decorative border ornaments */}
+                <CornerOrnament position="top-left" className="m-0.5 text-brand-clay/20" />
+                <CornerOrnament position="bottom-right" className="m-0.5 text-brand-clay/20" />
+              </div>
+            ) : (
+              displayProducts.map((product, idx) => {
+                const cardPos = getCardPositionStyles(idx, displayProducts.length);
+                
+                return (
+                  <div
+                    key={product.id}
+                    style={cardPos}
+                    onPointerUp={(e) => {
+                      e.stopPropagation();
+                      handlePointerUp(e, product);
+                    }}
+                    className="absolute w-[220px] sm:w-[260px] bg-brand-bg border border-brand-clay/20 p-3 sm:p-4 rounded-xl shadow-xl transition-shadow duration-300 hover:shadow-2xl hover:border-brand-terracotta select-none"
+                  >
+                    {/* Miniature archival tag line */}
+                    <div className="flex items-center justify-between border-b border-brand-clay/10 pb-2 mb-3">
+                      <span className="text-[8px] font-mono tracking-widest text-[#6A7450] uppercase font-bold">
+                        Atelier Register // {idx + 1}
+                      </span>
+                      <span className="text-[8px] font-mono text-brand-clay">
+                        [RANG-0{idx + 1}]
+                      </span>
+                    </div>
+
+                    {/* Photo Frame Container */}
+                    <div className="aspect-[3/4] overflow-hidden rounded-lg bg-brand-beige/25 relative border border-brand-clay/10 group-hover:scale-101 transition-all">
+                      <img 
+                        src={product.image || null} 
+                        alt={product.name} 
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover select-none pointer-events-none grayscale-[15%] group-hover:grayscale-0 transition-transform duration-1000"
+                      />
+                      
+                      {/* Floating mini currency and buy badges */}
+                      <div className="absolute bottom-2 left-2 bg-brand-bg/95 border border-brand-clay/20 px-2.5 py-1 rounded-md text-[9px] font-mono tracking-wider font-semibold text-brand-charcoal">
+                        ৳{product.price} BDT
+                      </div>
+                    </div>
+
+                    {/* Product Specification Title */}
+                    <div className="mt-3 px-1 text-left space-y-1">
+                      <h3 className="font-serif text-xs sm:text-sm font-semibold text-brand-charcoal line-clamp-1">
+                        {product.name}
+                      </h3>
+                      <p className="text-[10px] text-brand-olive font-serif italic line-clamp-1 mt-0.5">
+                        {product.banglaName}
+                      </p>
+                    </div>
+
+                    {/* Aesthetic Corner brackets on active face card */}
+                    <CornerOrnament position="top-left" className="m-0.5 text-brand-clay/30" />
+                    <CornerOrnament position="bottom-right" className="m-0.5 text-brand-clay/30" />
+                  </div>
+                );
+              })
+            )}
           </div>
 
           {/* Removed helper instructions as per user request */}
 
           {/* Floating leaf icon highlights for brand rhythm */}
-          <div className="absolute bottom-8 right-12 w-10 h-10 border border-brand-clay/15 rounded-full flex items-center justify-center bg-brand-bg z-30 opacity-40 pointer-events-none">
-            <LeafBranch size={22} className="text-brand-clay animate-pulse" />
+          <div className="absolute bottom-8 right-12 w-10 h-10 border border-white/10 rounded-full flex items-center justify-center bg-white/10 backdrop-blur-md z-30 opacity-70 pointer-events-none">
+            <LeafBranch size={22} className="text-white opacity-80 animate-pulse" />
           </div>
 
         </div>
@@ -332,9 +379,9 @@ export const HeroInteractive: React.FC<HeroInteractiveProps> = ({
       </div>
 
       {/* Static scroll indicator sidebar bottom-left */}
-      <div className="absolute bottom-8 left-12 hidden lg:flex flex-col items-center gap-3 text-brand-clay opacity-45 pointer-events-none">
+      <div className="absolute bottom-8 left-12 hidden lg:flex flex-col items-center gap-3 text-white/50 opacity-80 pointer-events-none">
         <span className="text-[9px] font-mono tracking-[0.25em] uppercase vertical-text">Scroll to explore</span>
-        <div className="w-px h-12 bg-gradient-to-b from-brand-clay to-transparent" />
+        <div className="w-px h-12 bg-gradient-to-b from-white/30 to-transparent" />
       </div>
     </section>
   );

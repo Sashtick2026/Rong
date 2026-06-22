@@ -1,12 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, useTransform, useInView, useSpring } from 'motion/react';
+import { motion, useScroll, useTransform, useInView, useSpring, AnimatePresence } from 'motion/react';
 import { Sparkles, ArrowRight, Share2, Heart, Star, BookmarkCheck, Calendar, Settings, RotateCcw } from 'lucide-react';
 import { AlpanaCircular, LeafBranch, PotteryOrnament, CornerOrnament, LuxuryBrushCircle } from './Ornaments';
-import { Product } from '../types';
 import { ProductCard } from './ProductCard';
 import { firestore } from '../lib/mockFirebase';
 
 // Import our custom images from data paths
+import { Product, Collection, CommunitySnap } from '../types';
 import heroSareeImg from '../assets/images/hero_saree_editorial_1781014487343.png';
 import handmadeJewelryImg from '../assets/images/handmade_jewelry_1781014504077.png';
 import homeDecorClayImg from '../assets/images/home_decor_clay_1781014520276.png';
@@ -22,6 +22,8 @@ interface HomeSectionsProps {
   isProductWishlisted: (product: Product) => boolean;
   setCategoryFilter: (category: string) => void;
   setCurrentPage: (page: string) => void;
+  communitySnaps?: CommunitySnap[];
+  onSubmitSnap?: (title: string, location: string, img: string) => void;
 }
 
 export const HomeSections: React.FC<HomeSectionsProps> = ({
@@ -32,7 +34,9 @@ export const HomeSections: React.FC<HomeSectionsProps> = ({
   onToggleWishlist,
   isProductWishlisted,
   setCategoryFilter,
-  setCurrentPage
+  setCurrentPage,
+  communitySnaps,
+  onSubmitSnap
 }) => {
 
   // Puzzle customizer local states
@@ -40,6 +44,13 @@ export const HomeSections: React.FC<HomeSectionsProps> = ({
   const [piece2Url, setPiece2Url] = useState(homeDecorClayImg);
   const [piece3Url, setPiece3Url] = useState(handmadeJewelryImg);
   const [piece4Url, setPiece4Url] = useState(paintingProcessImg);
+
+  // Submit Snapshot local form states
+  const [isSnapFormOpen, setIsSnapFormOpen] = useState(false);
+  const [snapTitle, setSnapTitle] = useState('');
+  const [snapLocation, setSnapLocation] = useState('');
+  const [snapImg, setSnapImg] = useState('');
+  const [snapSubmitted, setSnapSubmitted] = useState(false);
 
   useEffect(() => {
     try {
@@ -509,59 +520,6 @@ export const HomeSections: React.FC<HomeSectionsProps> = ({
             ))}
           </div>
 
-        </div>
-      </section>
-
-      {/* ==================================================== */}
-      {/* SECTION 6: "06. FROM OUR COMMUNITY" (Staged Masonry snaps) */}
-      {/* ==================================================== */}
-      <section className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center mb-10 sm:mb-14">
-          <span className="text-[10px] sm:text-xs font-mono font-bold tracking-[0.25em] text-brand-olive uppercase block">
-            06 // Global Keepers
-          </span>
-          <h2 className="font-serif text-2xl sm:text-3xl font-medium tracking-tight text-brand-charcoal">
-            Atelier Community Shapshots
-          </h2>
-          <p className="text-[11px] text-brand-clay font-sans tracking-wide mt-1">
-            Celebrating guardians of heritage across continents — @rang.handcrafted
-          </p>
-        </div>
-
-        {/* Masonry layout resembling vintage scrapbook / notebook aesthetic */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-          {[
-            { id: 1, title: 'Sonargaon Loom', location: 'Atelier', img: paintingProcessImg },
-            { id: 2, title: 'Clay Firing Set', location: 'Studio', img: homeDecorClayImg },
-            { id: 3, title: 'Exhibiting Muslin', location: 'Curation', img: heroSareeImg },
-            { id: 4, title: 'Glass chiming pack', location: 'Dhaka', img: banglesStackImg }
-          ].map((item) => (
-            <motion.div
-              key={item.id}
-              whileHover={{ scale: 1.03, rotate: item.id % 2 === 0 ? 1 : -1 }}
-              className="relative aspect-square rounded-2xl overflow-hidden bg-brand-beige/25 border border-brand-clay/15 p-1.5 group shadow-sm transition-transform duration-500"
-            >
-              {/* Scotch tape effect on corners resembling notebook aesthetic */}
-              <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-3.5 bg-brand-beige/70 opacity-80 backdrop-blur-xs z-20 pointer-events-none origin-center rotate-2 shadow-[0_1px_2px_rgba(0,0,0,0.02)]" />
-              
-              <div className="w-full h-full rounded-xl overflow-hidden relative">
-                <img
-                  src={item.img}
-                  alt={item.title}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover group-hover:scale-106 transition-transform duration-1000 filter grayscale-[10%] group-hover:grayscale-0"
-                />
-                <div className="absolute inset-0 bg-brand-charcoal/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 text-left text-white z-10">
-                  <span className="text-[8px] font-mono uppercase tracking-widest text-brand-terracotta font-bold">
-                    {item.location}
-                  </span>
-                  <h4 className="font-serif text-sm font-semibold text-white">
-                    {item.title}
-                  </h4>
-                </div>
-              </div>
-            </motion.div>
-          ))}
         </div>
       </section>
 

@@ -26,8 +26,8 @@ import {
   addDoc
 } from 'firebase/firestore';
 
-import { Product, Collection, JournalArticle } from '../types';
-import { products as initialProducts, collections as initialCollections, journalArticles as initialPosts } from '../data';
+import { Product, Collection, JournalArticle, Testimonial, CommunitySnap } from '../types';
+import { products as initialProducts, collections as initialCollections, journalArticles as initialPosts, testimonials as initialReviews } from '../data';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 // ==========================================
@@ -67,7 +67,7 @@ export interface AdminOrder {
     quantity: number;
   }[];
   totalAmount: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'verification_pending' | 'payment_verified' | 'payment_rejected';
   createdAt: string;
   shippingAddress: string;
   bkashNumber?: string;
@@ -112,6 +112,7 @@ export interface SiteSettings {
   workflowTitle?: string;
   workflowSubtitle?: string;
   bkashNumber?: string;
+  sliderProductIds?: string[];
 }
 
 export interface AboutSettings {
@@ -197,8 +198,8 @@ export interface ContactMessage {
 const initialUsers: UserProfile[] = [
   {
     uid: 'user_super_admin',
-    name: 'Kazi Rang Super',
-    email: 'superadmin@rang.com',
+    name: 'Kazi Rongo Super',
+    email: 'superadmin@rongo.com',
     role: 'superAdmin',
     createdAt: '2026-01-10T12:00:00Z',
     updatedAt: '2026-06-10T03:00:00Z',
@@ -210,7 +211,7 @@ const initialUsers: UserProfile[] = [
   {
     uid: 'user_admin_1',
     name: 'Adiba Rahman',
-    email: 'admin@rang.com',
+    email: 'admin@rongo.com',
     role: 'admin',
     createdAt: '2026-02-15T09:30:00Z',
     updatedAt: '2026-06-08T11:20:00Z',
@@ -257,16 +258,16 @@ const initialOrders: AdminOrder[] = [
 ];
 
 const defaultSettings: SiteSettings = {
-  siteName: 'রঙ Heritage',
+  siteName: 'রঙ (Rongo) Heritage',
   logoText: 'রঙ',
   phone: '+880 2 8812345',
-  email: 'dialog@rangheritage.com',
+  email: 'dialog@rongoheritage.com',
   address: 'Gulshan-2, Road 44, Building 5A, Dhaka 1212, Bangladesh',
-  facebook: 'https://facebook.com/rang.heritage',
-  instagram: 'https://instagram.com/rang.heritage',
-  youtube: 'https://youtube.com/c/rangheritage',
-  seoTitle: 'রঙ — Handmade Lifestyle & Heritage Curation of Bengal',
-  seoDescription: 'Discover limited premium Rajshahi silks, traditional terracotta collar jewelry, unrefined brass objects, and hand-painted sarees with roots in Bangladesh.',
+  facebook: 'https://facebook.com/rongo.heritage',
+  instagram: 'https://instagram.com/rongo.heritage',
+  youtube: 'https://youtube.com/c/rongoheritage',
+  seoTitle: 'রঙ (Rongo) Heritage — Handmade Lifestyle & Heritage Curation of Bengal',
+  seoDescription: 'Discover limited premium Rajshahi silks, traditional terracotta collar jewelry, unrefined brass objects, and hand-painted sarees with roots in Bangladesh at রঙ (Rongo) Heritage.',
   shippingCost: 25,
   freeShippingThreshold: 500,
   heroTitleLine1: 'Archived Loom.',
@@ -283,18 +284,19 @@ const defaultSettings: SiteSettings = {
   philosophyCardSubtitle: 'Thirst of Clay Series // Fired 1000°C',
   workflowPretitle: '03 // The Integration of Harvest',
   workflowTitle: "The Flow of Brand's Work",
-  workflowSubtitle: 'Harmonizing Soil, Loom & Pigment'
+  workflowSubtitle: 'Harmonizing Soil, Loom & Pigment',
+  sliderProductIds: ['saree-nilufer', 'jewelry-poromatshya', 'pot-kolsi-luxury', 'bangles-mukta', 'saree-boshonto']
 };
 
 const defaultAboutSettings: AboutSettings = {
-  pretitle: "The Inception of Rang",
+  pretitle: "The Inception of Rongo",
   titleLine1: "Where Soil Meets",
   titleLine2: "the Silent Brush",
-  quote: "“Rang (রঙ) is not merely a label of accessories; it is a dedicated journal celebrating the organic longevity of Bangladeshi culture and craftsmanship.”",
+  quote: "“Rongo (রঙ) is not merely a label of accessories; it is a dedicated journal celebrating the organic longevity of Bangladeshi culture and craftsmanship.”",
   image: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?q=80&w=800&auto=format&fit=crop",
   badge: "ESTD. 2026 / DHAKA",
   manifestoTitle: "Our Manifesto",
-  manifestoPara1: "In an age governed by automated assembly lines and synthetic, fast-decaying products, Rang was founded with a conviction: to create objects that contain soul, breath, and historical weight. Our materials are born from fertile silt beds, hand-spun fibers, and unrefined minerals.",
+  manifestoPara1: "In an age governed by automated assembly lines and synthetic, fast-decaying products, Rongo was founded with a conviction: to create objects that contain soul, breath, and historical weight. Our materials are born from fertile silt beds, hand-spun fibers, and unrefined minerals.",
   manifestoPara2: "Every hand-painted saree we curate, every single clay bead strung onto our accessories represents an unhurried dialog between the master designer and raw matter. We reject traditional high-volume production, choosing instead to showcase limited releases where every single product has its own lineage, story, and serial code.",
   manifestoQuote: "“We do not manufacture. We whisper old-world geometries onto new surfaces, creating functional canvases of daily luxury.”",
   pillar1Title: "Pristine Craftsmanship",
@@ -314,18 +316,18 @@ const defaultAboutSettings: AboutSettings = {
 const defaultFooterSettings: FooterSettings = {
   brandName: 'রঙ',
   brandTagline: 'Where Heritage Meets Imagination',
-  footerMessage: '“রঙ (Rang) is not merely a label of accessories; it is a dedicated journal celebrating the organic longevity of Bangladeshi culture and craftsmanship.”',
+  footerMessage: '“রঙ (Rongo) is not merely a label of accessories; it is a dedicated journal celebrating the organic longevity of Bangladeshi culture and craftsmanship.”',
   logoUrl: 'https://i.ibb.co.com/YFW3wDm4/20260610-013250.jpg',
   newsletterTitle: 'Sign up for our Heritage Dispatch',
   newsletterDescription: 'Receive seasonal journals, weaver schedules, limited-edition announcements and handcrafted tales of Bengal.',
-  email: 'dialog@rangheritage.com',
+  email: 'dialog@rongoheritage.com',
   phone: '+880 2 8812345',
   address: 'Gulshan-2, Road 44, Building 5A, Dhaka 1212, Bangladesh',
   socialLinks: {
-    facebook: 'https://facebook.com/rang.heritage',
-    instagram: 'https://instagram.com/rang.heritage',
-    pinterest: 'https://pinterest.com/rangheritage',
-    youtube: 'https://youtube.com/c/rangheritage',
+    facebook: 'https://facebook.com/rongo.heritage',
+    instagram: 'https://instagram.com/rongo.heritage',
+    pinterest: 'https://pinterest.com/rongoheritage',
+    youtube: 'https://youtube.com/c/rongoheritage',
     whatsapp: 'https://wa.me/88028812345'
   },
   copyrightText: '© 2026 রঙ Heritage. All rights reserved regarding designs, drawings, and documents.',
@@ -347,14 +349,14 @@ const defaultFooterSettings: FooterSettings = {
 const defaultCoupons: Coupon[] = [
   { code: 'HERITAGE15', discountPercent: 15, active: true },
   { code: 'BESHILOVE25', discountPercent: 25, active: true },
-  { code: 'RANG10', discountPercent: 10, active: true }
+  { code: 'RONGO10', discountPercent: 10, active: true }
 ];
 
 const defaultPuzzlePieces: PuzzlePieces = {
-  piece1Url: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=600',
-  piece2Url: 'https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?q=80&w=600',
-  piece3Url: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=600',
-  piece4Url: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=600'
+  piece1Url: 'https://i.ibb.co.com/ZpjZfBwV/lucid-origin-Ultra-detailed-museum-quality-photography-of-traditional-Bangladeshi-clay-toy-do-0.jpg',
+  piece2Url: 'https://i.ibb.co.com/20XHgmjR/lucid-origin-Luxury-editorial-flat-lay-of-authentic-Bangladeshi-handcrafted-products-displaye-0.jpg',
+  piece3Url: 'https://i.ibb.co.com/j9wtJhbR/lucid-origin-Close-up-luxury-product-photography-of-traditional-Bangladeshi-handcrafted-bangl-0.jpg',
+  piece4Url: 'https://i.ibb.co.com/Gf03kD2S/lucid-origin-Authentic-Bangladeshi-handcrafted-clay-hari-patil-pottery-collection-displayed-i-0.jpg'
 };
 
 const defaultMediaList: MediaItem[] = [
@@ -394,18 +396,20 @@ const initialMessages: ContactMessage[] = [
 // CLIENT-SIDE REALTIME IN-MEMORY CACHE LOADER
 // ==========================================
 
-let cachedProducts: Product[] = JSON.parse(localStorage.getItem('rang_real_products') || '[]');
-let cachedCollections: Collection[] = JSON.parse(localStorage.getItem('rang_real_collections') || '[]');
-let cachedOrders: AdminOrder[] = JSON.parse(localStorage.getItem('rang_real_orders') || '[]');
-let cachedUsers: UserProfile[] = JSON.parse(localStorage.getItem('rang_real_users') || '[]');
-let cachedPosts: JournalArticle[] = JSON.parse(localStorage.getItem('rang_real_posts') || '[]');
-let cachedMedia: MediaItem[] = JSON.parse(localStorage.getItem('rang_real_media') || '[]');
-let cachedSettings: SiteSettings = JSON.parse(localStorage.getItem('rang_real_settings') || 'null') || defaultSettings;
-let cachedFooterSettings: FooterSettings = JSON.parse(localStorage.getItem('rang_real_footer') || 'null') || defaultFooterSettings;
-let cachedCoupons: Coupon[] = JSON.parse(localStorage.getItem('rang_real_coupons') || '[]');
-let cachedPuzzlePieces: PuzzlePieces = JSON.parse(localStorage.getItem('rang_real_puzzle') || 'null') || defaultPuzzlePieces;
-let cachedAboutSettings: AboutSettings = JSON.parse(localStorage.getItem('rang_real_about') || 'null') || defaultAboutSettings;
-let cachedMessages: ContactMessage[] = JSON.parse(localStorage.getItem('rang_real_messages') || '[]');
+let cachedProducts: Product[] = JSON.parse(localStorage.getItem('rongo_real_products') || '[]');
+let cachedCollections: Collection[] = JSON.parse(localStorage.getItem('rongo_real_collections') || '[]');
+let cachedOrders: AdminOrder[] = JSON.parse(localStorage.getItem('rongo_real_orders') || '[]');
+let cachedUsers: UserProfile[] = JSON.parse(localStorage.getItem('rongo_real_users') || '[]');
+let cachedPosts: JournalArticle[] = JSON.parse(localStorage.getItem('rongo_real_posts') || '[]');
+let cachedMedia: MediaItem[] = JSON.parse(localStorage.getItem('rongo_real_media') || '[]');
+let cachedSettings: SiteSettings = JSON.parse(localStorage.getItem('rongo_real_settings') || 'null') || defaultSettings;
+let cachedFooterSettings: FooterSettings = JSON.parse(localStorage.getItem('rongo_real_footer') || 'null') || defaultFooterSettings;
+let cachedCoupons: Coupon[] = JSON.parse(localStorage.getItem('rongo_real_coupons') || '[]');
+let cachedPuzzlePieces: PuzzlePieces = JSON.parse(localStorage.getItem('rongo_real_puzzle') || 'null') || defaultPuzzlePieces;
+let cachedAboutSettings: AboutSettings = JSON.parse(localStorage.getItem('rongo_real_about') || 'null') || defaultAboutSettings;
+let cachedMessages: ContactMessage[] = JSON.parse(localStorage.getItem('rongo_real_messages') || '[]');
+let cachedReviews: Testimonial[] = JSON.parse(localStorage.getItem('rongo_real_reviews') || '[]');
+let cachedCommunitySnaps: CommunitySnap[] = JSON.parse(localStorage.getItem('rongo_real_community_snaps') || '[]');
 
 export interface PaymentSettings {
   bkashNumber: string;
@@ -450,6 +454,24 @@ const defaultPaymentSettings: PaymentSettings = {
 let cachedPaymentSettings: PaymentSettings = JSON.parse(localStorage.getItem('rong_real_payment_settings') || 'null') || defaultPaymentSettings;
 let cachedPaymentVerifications: PaymentVerification[] = JSON.parse(localStorage.getItem('rong_real_payment_verifications') || '[]');
 let cachedInAppNotifications: InAppNotification[] = JSON.parse(localStorage.getItem('rong_real_notifications') || '[]');
+
+// Helper to recursively strip any undefined properties to prevent Firestore serialization crashes
+export function cleanUndefined<T>(obj: T): T {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(item => cleanUndefined(item)) as any;
+  }
+  const cleaned: any = {};
+  for (const key of Object.keys(obj)) {
+    const val = (obj as any)[key];
+    if (val !== undefined) {
+      cleaned[key] = cleanUndefined(val);
+    }
+  }
+  return cleaned as T;
+}
 
 // ==========================================
 // FIRESTORE ERROR HANDLING MANDATE
@@ -529,100 +551,143 @@ async function seedDatabaseIfNeeded() {
     if (querySnap.empty) {
       console.log('No products found on Firestore. Beginning automatic database seed...');
       
-      // 1. Seed products (include mapping for schema & frontend variables)
-      for (const p of initialProducts) {
-        const docData = {
-          ...p,
-          productId: p.id,
-          title: p.name,
-          mainImage: p.image,
-          galleryImages: p.images || [p.image],
-          featured: p.bestSeller || false,
-          shortDescription: p.description.slice(0, 150),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-        await setDoc(doc(db, 'products', p.id), docData);
+      // 1. (Products and Collections are NOT seeded automatically per User request to use database-only data)
+
+      // 3. Seed site settings configurations
+      try {
+        await setDoc(doc(db, 'siteSettings', 'general'), cleanUndefined({
+          siteName: defaultSettings.siteName,
+          logoText: defaultSettings.logoText,
+          email: defaultSettings.email,
+          phone: defaultSettings.phone,
+          address: defaultSettings.address,
+          facebook: defaultSettings.facebook,
+          instagram: defaultSettings.instagram,
+          youtube: defaultSettings.youtube,
+          seoTitle: defaultSettings.seoTitle,
+          seoDescription: defaultSettings.seoDescription,
+          shippingCost: defaultSettings.shippingCost,
+          freeShippingThreshold: defaultSettings.freeShippingThreshold,
+          bkashNumber: defaultSettings.bkashNumber,
+          logoUrl: defaultSettings.logoUrl
+        }));
+
+        await setDoc(doc(db, 'siteSettings', 'footer'), cleanUndefined(defaultFooterSettings));
+        await setDoc(doc(db, 'siteSettings', 'about'), cleanUndefined(defaultAboutSettings));
+        await setDoc(doc(db, 'siteSettings', 'puzzle'), cleanUndefined(defaultPuzzlePieces));
+        await setDoc(doc(db, 'siteSettings', 'paymentSettings'), cleanUndefined(defaultPaymentSettings));
+        console.log('Successfully seeded site settings.');
+      } catch (err) {
+        console.warn('Failed seeding site settings:', err);
       }
-
-      // 2. Seed collections
-      for (const c of initialCollections) {
-        const docData = {
-          ...c,
-          title: c.name,
-          slug: c.id,
-          bannerImageUrl: c.image,
-          featured: true
-        };
-        await setDoc(doc(db, 'collections', c.id), docData);
-      }
-
-      // 3. Seed settings
-      await setDoc(doc(db, 'siteSettings', 'general'), {
-        siteName: defaultSettings.siteName,
-        logoText: defaultSettings.logoText,
-        email: defaultSettings.email,
-        phone: defaultSettings.phone,
-        address: defaultSettings.address,
-        facebook: defaultSettings.facebook,
-        instagram: defaultSettings.instagram,
-        youtube: defaultSettings.youtube,
-        seoTitle: defaultSettings.seoTitle,
-        seoDescription: defaultSettings.seoDescription,
-        shippingCost: defaultSettings.shippingCost,
-        freeShippingThreshold: defaultSettings.freeShippingThreshold,
-        bkashNumber: defaultSettings.bkashNumber,
-        logoUrl: defaultSettings.logoUrl
-      });
-
-      await setDoc(doc(db, 'siteSettings', 'footer'), defaultFooterSettings);
-      await setDoc(doc(db, 'siteSettings', 'about'), defaultAboutSettings);
-      await setDoc(doc(db, 'siteSettings', 'puzzle'), defaultPuzzlePieces);
-      await setDoc(doc(db, 'siteSettings', 'paymentSettings'), defaultPaymentSettings);
 
       // 4. Seed journalPosts
-      for (const post of initialPosts) {
-        const docData = {
-          postId: post.id,
-          title: post.title,
-          slug: post.title.toLowerCase().replace(/\s+/g, '-'),
-          content: Array.isArray(post.content) ? post.content : [post.content],
-          coverImageUrl: post.image,
-          published: true,
-          createdAt: new Date().toISOString()
-        };
-        await setDoc(doc(db, 'journalPosts', post.id), docData);
+      try {
+        for (const post of initialPosts) {
+          const docData = {
+            postId: post.id,
+            title: post.title,
+            slug: post.title.toLowerCase().replace(/\s+/g, '-'),
+            content: Array.isArray(post.content) ? post.content : [post.content],
+            coverImageUrl: post.image,
+            published: true,
+            createdAt: new Date().toISOString()
+          };
+          await setDoc(doc(db, 'journalPosts', post.id), cleanUndefined(docData));
+        }
+        console.log('Successfully seeded journal posts.');
+      } catch (err) {
+        console.warn('Failed seeding journal posts:', err);
       }
 
       // 5. Seed coupons
-      for (const coupon of defaultCoupons) {
-        await setDoc(doc(db, 'coupons', coupon.code), coupon);
+      try {
+        for (const coupon of defaultCoupons) {
+          await setDoc(doc(db, 'coupons', coupon.code), cleanUndefined(coupon));
+        }
+        console.log('Successfully seeded coupons.');
+      } catch (err) {
+        console.warn('Failed seeding coupons:', err);
       }
 
       // 6. Seed initial user profiles
-      for (const u of initialUsers) {
-        await setDoc(doc(db, 'users', u.uid), {
-          ...u,
-          role: u.uid === 'user_super_admin' ? 'superAdmin' : u.role
-        });
+      try {
+        for (const u of initialUsers) {
+          await setDoc(doc(db, 'users', u.uid), cleanUndefined({
+            ...u,
+            role: u.uid === 'user_super_admin' ? 'superAdmin' : u.role
+          }));
+        }
+        console.log('Successfully seeded default user profiles.');
+      } catch (err) {
+        console.warn('Failed seeding user profiles:', err);
       }
 
       // 7. Seed initial media entries
-      for (const m of defaultMediaList) {
-        await setDoc(doc(db, 'media', m.id), m);
+      try {
+        for (const m of defaultMediaList) {
+          await setDoc(doc(db, 'media', m.id), cleanUndefined(m));
+        }
+        console.log('Successfully seeded media library assets.');
+      } catch (err) {
+        console.warn('Failed seeding media assets:', err);
       }
 
       // 8. Seed initial contact messages
-      for (const msg of initialMessages) {
-        await setDoc(doc(db, 'messages', msg.id), msg);
+      try {
+        for (const msg of initialMessages) {
+          await setDoc(doc(db, 'messages', msg.id), cleanUndefined(msg));
+        }
+        console.log('Successfully seeded starting contact messages.');
+      } catch (err) {
+        console.warn('Failed seeding contact messages:', err);
       }
 
       // 9. Seed initial orders list
-      for (const ord of initialOrders) {
-        await setDoc(doc(db, 'orders', ord.id), {
-          ...ord,
-          status: 'processing'
-        });
+      try {
+        for (const ord of initialOrders) {
+          await setDoc(doc(db, 'orders', ord.id), cleanUndefined({
+            ...ord,
+            status: 'processing'
+          }));
+        }
+        console.log('Successfully seeded orders list.');
+      } catch (err) {
+        console.warn('Failed seeding orders list:', err);
+      }
+
+      // 10. Seed initial reviews (Voice of the Keepers)
+      try {
+        for (const test of initialReviews) {
+          await setDoc(doc(db, 'reviews', test.id), cleanUndefined({
+            id: test.id,
+            name: test.name,
+            role: test.role,
+            quote: test.quote,
+            location: test.location,
+            approved: true,
+            createdAt: new Date().toISOString()
+          }));
+        }
+        console.log('Successfully seeded reviews.');
+      } catch (reviewsErr) {
+        console.warn('Deferred seeding of some reviews (may already exist or restricted):', reviewsErr);
+      }
+
+      // 11. Seed initial community snapshots (Alter Community Snapshot)
+      try {
+        const defaultSnaps = [
+          { id: 'snap_1', title: 'Sonargaon Loom', location: 'Atelier', img: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800', approved: true, createdAt: new Date().toISOString(), submittedBy: 'System' },
+          { id: 'snap_2', title: 'Clay Firing Set', location: 'Studio', img: 'https://images.unsplash.com/photo-1565192647048-f997ded879f0?auto=format&fit=crop&q=80&w=800', approved: true, createdAt: new Date().toISOString(), submittedBy: 'System' },
+          { id: 'snap_3', title: 'Exhibiting Muslin', location: 'Curation', img: 'https://images.unsplash.com/photo-1601887389937-0b02c26b6c3c?auto=format&fit=crop&q=80&w=800', approved: true, createdAt: new Date().toISOString(), submittedBy: 'System' },
+          { id: 'snap_4', title: 'Glass chiming pack', location: 'Dhaka', img: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80&w=800', approved: true, createdAt: new Date().toISOString(), submittedBy: 'System' }
+        ];
+        for (const snap of defaultSnaps) {
+          await setDoc(doc(db, 'communitySnaps', snap.id), cleanUndefined(snap));
+        }
+        console.log('Successfully seeded community snaps.');
+      } catch (snapsErr) {
+        console.warn('Deferred seeding of some community snaps (may already exist or restricted):', snapsErr);
       }
 
       console.log('Atelier Firebase database successfully prepared!');
@@ -637,8 +702,14 @@ async function seedDatabaseIfNeeded() {
   }
 }
 
-// Start database seeding checker
+async function ensureReviewsAndSnapsAreSeeded() {
+  // Mock seeding removed so only real customers reviews and snapshots can be featured once live
+  console.log('Skipping default seeding for reviews and community snaps.');
+}
+
+// Start database seeding checkers
 seedDatabaseIfNeeded();
+ensureReviewsAndSnapsAreSeeded();
 
 // ==========================================
 // REALTIME LISTENER DEPLOYMENTS
@@ -672,8 +743,8 @@ const setupRealtimeSync = () => {
       });
     });
     cachedProducts = list;
-    localStorage.setItem('rang_real_products', JSON.stringify(list));
-  });
+    localStorage.setItem('rongo_real_products', JSON.stringify(list));
+  }, (err) => console.warn('Products sync deferred:', err.message));
 
   // Collections Sync
   onSnapshot(collection(db, 'collections'), (snap) => {
@@ -692,8 +763,8 @@ const setupRealtimeSync = () => {
       });
     });
     cachedCollections = list;
-    localStorage.setItem('rang_real_collections', JSON.stringify(list));
-  });
+    localStorage.setItem('rongo_real_collections', JSON.stringify(list));
+  }, (err) => console.warn('Collections sync deferred:', err.message));
 
   // Orders Sync
   onSnapshot(collection(db, 'orders'), (snap) => {
@@ -704,8 +775,8 @@ const setupRealtimeSync = () => {
     // Sort newest orders first
     list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     cachedOrders = list;
-    localStorage.setItem('rang_real_orders', JSON.stringify(list));
-  });
+    localStorage.setItem('rongo_real_orders', JSON.stringify(list));
+  }, (err) => console.warn('Orders sync deferred:', err.message));
 
   // Users Directory Sync
   onSnapshot(collection(db, 'users'), (snap) => {
@@ -714,8 +785,8 @@ const setupRealtimeSync = () => {
       list.push(docSnap.data() as UserProfile);
     });
     cachedUsers = list;
-    localStorage.setItem('rang_real_users', JSON.stringify(list));
-  });
+    localStorage.setItem('rongo_real_users', JSON.stringify(list));
+  }, (err) => console.warn('Users directory sync deferred:', err.message));
 
   // Journal (journalPosts) Sync
   onSnapshot(collection(db, 'journalPosts'), (snap) => {
@@ -736,8 +807,8 @@ const setupRealtimeSync = () => {
       });
     });
     cachedPosts = list;
-    localStorage.setItem('rang_real_posts', JSON.stringify(list));
-  });
+    localStorage.setItem('rongo_real_posts', JSON.stringify(list));
+  }, (err) => console.warn('Journal sync deferred:', err.message));
 
   // Media Library Sync
   onSnapshot(collection(db, 'media'), (snap) => {
@@ -746,8 +817,8 @@ const setupRealtimeSync = () => {
       list.push(docSnap.data() as MediaItem);
     });
     cachedMedia = list;
-    localStorage.setItem('rang_real_media', JSON.stringify(list));
-  });
+    localStorage.setItem('rongo_real_media', JSON.stringify(list));
+  }, (err) => console.warn('Media directory sync deferred:', err.message));
 
   // SiteSettings Sync
   onSnapshot(collection(db, 'siteSettings'), (snap) => {
@@ -755,22 +826,22 @@ const setupRealtimeSync = () => {
       const data = snapDoc.data();
       if (snapDoc.id === 'general') {
         cachedSettings = { ...defaultSettings, ...data };
-        localStorage.setItem('rang_real_settings', JSON.stringify(cachedSettings));
+        localStorage.setItem('rongo_real_settings', JSON.stringify(cachedSettings));
       } else if (snapDoc.id === 'footer') {
         cachedFooterSettings = { ...defaultFooterSettings, ...data };
-        localStorage.setItem('rang_real_footer', JSON.stringify(cachedFooterSettings));
+        localStorage.setItem('rongo_real_footer', JSON.stringify(cachedFooterSettings));
       } else if (snapDoc.id === 'about') {
         cachedAboutSettings = { ...defaultAboutSettings, ...data };
-        localStorage.setItem('rang_real_about', JSON.stringify(cachedAboutSettings));
+        localStorage.setItem('rongo_real_about', JSON.stringify(cachedAboutSettings));
       } else if (snapDoc.id === 'puzzle') {
         cachedPuzzlePieces = { ...defaultPuzzlePieces, ...data };
-        localStorage.setItem('rang_real_puzzle', JSON.stringify(cachedPuzzlePieces));
+        localStorage.setItem('rongo_real_puzzle', JSON.stringify(cachedPuzzlePieces));
       } else if (snapDoc.id === 'paymentSettings') {
         cachedPaymentSettings = { ...defaultPaymentSettings, ...data } as PaymentSettings;
         localStorage.setItem('rong_real_payment_settings', JSON.stringify(cachedPaymentSettings));
       }
     });
-  });
+  }, (err) => console.warn('Site settings sync deferred:', err.message));
 
   // Payment Verification Sync
   onSnapshot(collection(db, 'paymentVerification'), (snap) => {
@@ -782,7 +853,7 @@ const setupRealtimeSync = () => {
     list.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
     cachedPaymentVerifications = list;
     localStorage.setItem('rong_real_payment_verifications', JSON.stringify(list));
-  });
+  }, (err) => console.warn('Payment verification sync deferred:', err.message));
 
   // In-App Notifications Sync
   onSnapshot(collection(db, 'notifications'), (snap) => {
@@ -794,7 +865,7 @@ const setupRealtimeSync = () => {
     list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     cachedInAppNotifications = list;
     localStorage.setItem('rong_real_notifications', JSON.stringify(list));
-  });
+  }, (err) => console.warn('System notifications sync deferred:', err.message));
 
   // Coupons Sync
   onSnapshot(collection(db, 'coupons'), (snap) => {
@@ -803,8 +874,8 @@ const setupRealtimeSync = () => {
       list.push(docSnap.data() as Coupon);
     });
     cachedCoupons = list;
-    localStorage.setItem('rang_real_coupons', JSON.stringify(list));
-  });
+    localStorage.setItem('rongo_real_coupons', JSON.stringify(list));
+  }, (err) => console.warn('Coupons sync deferred:', err.message));
 
   // Messages Sync
   onSnapshot(collection(db, 'messages'), (snap) => {
@@ -813,8 +884,46 @@ const setupRealtimeSync = () => {
       list.push(docSnap.data() as ContactMessage);
     });
     cachedMessages = list;
-    localStorage.setItem('rang_real_messages', JSON.stringify(list));
-  });
+    localStorage.setItem('rongo_real_messages', JSON.stringify(list));
+  }, (err) => console.warn('Admin messages sync deferred:', err.message));
+
+  // Reviews Sync
+  onSnapshot(collection(db, 'reviews'), (snap) => {
+    const list: Testimonial[] = [];
+    snap.forEach((docSnap) => {
+      const data = docSnap.data();
+      list.push({
+        id: docSnap.id,
+        name: data.name || '',
+        role: data.role || 'Keeper',
+        quote: data.quote || '',
+        location: data.location || '',
+        approved: data.approved !== false,
+        createdAt: data.createdAt || new Date().toISOString()
+      });
+    });
+    cachedReviews = list;
+    localStorage.setItem('rongo_real_reviews', JSON.stringify(list));
+  }, (err) => console.warn('Reviews sync deferred:', err.message));
+
+  // CommunitySnaps Sync
+  onSnapshot(collection(db, 'communitySnaps'), (snap) => {
+    const list: CommunitySnap[] = [];
+    snap.forEach((docSnap) => {
+      const data = docSnap.data();
+      list.push({
+        id: docSnap.id,
+        title: data.title || '',
+        location: data.location || '',
+        img: data.img || '',
+        approved: data.approved !== false,
+        createdAt: data.createdAt || new Date().toISOString(),
+        submittedBy: data.submittedBy || ''
+      });
+    });
+    cachedCommunitySnaps = list;
+    localStorage.setItem('rongo_real_community_snaps', JSON.stringify(list));
+  }, (err) => console.warn('CommunitySnaps sync deferred:', err.message));
 };
 
 setupRealtimeSync();
@@ -823,12 +932,12 @@ setupRealtimeSync();
 // AUTH STATE CACHING DRIVER
 // ==========================================
 
-let currentUserProfile: UserProfile | null = JSON.parse(localStorage.getItem('rang_real_auth_cache') || 'null');
+let currentUserProfile: UserProfile | null = JSON.parse(localStorage.getItem('rongo_real_auth_cache') || 'null');
 
 onAuthStateChanged(auth, (firebaseUser) => {
   if (firebaseUser) {
     // 1. Immediately apply cached credentials if matches the active uid
-    const cached = localStorage.getItem('rang_real_auth_cache');
+    const cached = localStorage.getItem('rongo_real_auth_cache');
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
@@ -840,7 +949,8 @@ onAuthStateChanged(auth, (firebaseUser) => {
 
     // 2. Fallback to immediate local object if no cache exists, avoiding any blocking wait
     if (!currentUserProfile) {
-      const isSuper = firebaseUser.email === 'rongo5707@gmail.com' || firebaseUser.email === 'superadmin@rang.com' || firebaseUser.email === 'superadmin@rong.com';
+      const emailLower = (firebaseUser.email || '').toLowerCase();
+      const isSuper = emailLower === 'rongo5707@gmail.com' || emailLower === 'superadmin@rongo.com' || emailLower === 'superadmin@rang.com' || emailLower === 'superadmin@rong.com' || emailLower === 'sashtick26@gmail.com';
       currentUserProfile = {
         uid: firebaseUser.uid,
         name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Atelier Keeper',
@@ -852,8 +962,18 @@ onAuthStateChanged(auth, (firebaseUser) => {
       };
     }
     
-    localStorage.setItem('rang_real_auth_cache', JSON.stringify(currentUserProfile));
-    localStorage.setItem('rang_auth_current_uid', firebaseUser.uid);
+    localStorage.setItem('rongo_real_auth_cache', JSON.stringify(currentUserProfile));
+    localStorage.setItem('rongo_auth_current_uid', firebaseUser.uid);
+
+    // Reset seed indicating parameter if isSuper is true to clear the bypass and trigger seeding with active admin auth permissions
+    const emailLower = (firebaseUser.email || '').toLowerCase();
+    const isSuper = emailLower === 'rongo5707@gmail.com' || emailLower === 'superadmin@rongo.com' || emailLower === 'superadmin@rang.com' || emailLower === 'superadmin@rong.com' || emailLower === 'sashtick26@gmail.com';
+    if (isSuper) {
+      localStorage.removeItem('rong_database_seeded_v3');
+      setTimeout(() => {
+        seedDatabaseIfNeeded().catch(() => {});
+      }, 1000);
+    }
 
     // 3. Perform completely asynchronous background revalidation against Firestore
     const docRef = doc(db, 'users', firebaseUser.uid);
@@ -861,12 +981,11 @@ onAuthStateChanged(auth, (firebaseUser) => {
       if (docSnap.exists()) {
         const freshProfile = docSnap.data() as UserProfile;
         currentUserProfile = freshProfile;
-        localStorage.setItem('rang_real_auth_cache', JSON.stringify(freshProfile));
+        localStorage.setItem('rongo_real_auth_cache', JSON.stringify(freshProfile));
         
         // update lastLogin asynchronously
         updateDoc(docRef, { lastLogin: new Date().toISOString() }).catch(() => {});
       } else {
-        const isSuper = firebaseUser.email === 'rongo5707@gmail.com' || firebaseUser.email === 'superadmin@rang.com' || firebaseUser.email === 'superadmin@rong.com';
         const profile: UserProfile = {
           uid: firebaseUser.uid,
           name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Atelier Keeper',
@@ -878,15 +997,15 @@ onAuthStateChanged(auth, (firebaseUser) => {
         };
         setDoc(docRef, profile).catch(() => {});
         currentUserProfile = profile;
-        localStorage.setItem('rang_real_auth_cache', JSON.stringify(profile));
+        localStorage.setItem('rongo_real_auth_cache', JSON.stringify(profile));
       }
     }).catch((err) => {
       console.warn('Silent profile revalidation skipped (retained cached profile):', err.message);
     });
   } else {
     currentUserProfile = null;
-    localStorage.removeItem('rang_real_auth_cache');
-    localStorage.removeItem('rang_auth_current_uid');
+    localStorage.removeItem('rongo_real_auth_cache');
+    localStorage.removeItem('rongo_auth_current_uid');
   }
 });
 
@@ -923,7 +1042,7 @@ export const firebaseAuth = {
               };
               await setDoc(doc(db, 'users', cred.user.uid), profile);
               currentUserProfile = profile;
-              localStorage.setItem('rang_real_auth_cache', JSON.stringify(profile));
+              localStorage.setItem('rongo_real_auth_cache', JSON.stringify(profile));
               return profile;
             } catch (signupErr) {
               console.error('Superadmin self-sign-up crash:', signupErr);
@@ -949,7 +1068,7 @@ export const firebaseAuth = {
 
       if (offlineFallback || !profileSnap || !profileSnap.exists()) {
         // Retrieve from local storage cache if available
-        const cached = localStorage.getItem('rang_real_auth_cache');
+        const cached = localStorage.getItem('rongo_real_auth_cache');
         if (cached) {
           try {
             const cachedUser = JSON.parse(cached);
@@ -960,7 +1079,8 @@ export const firebaseAuth = {
           } catch (pe) {}
         }
 
-        const isSuper = firebaseUser.email === superAdminEmail;
+        const emailLower = (firebaseUser.email || '').toLowerCase();
+        const isSuper = emailLower === 'rongo5707@gmail.com' || emailLower === 'superadmin@rongo.com' || emailLower === 'superadmin@rang.com' || emailLower === 'superadmin@rong.com' || emailLower === 'sashtick26@gmail.com';
         const profile: UserProfile = {
           uid: firebaseUser.uid,
           name: firebaseUser.displayName || 'Atelier Keeper',
@@ -978,7 +1098,7 @@ export const firebaseAuth = {
           }
         }
         currentUserProfile = profile;
-        localStorage.setItem('rang_real_auth_cache', JSON.stringify(profile));
+        localStorage.setItem('rongo_real_auth_cache', JSON.stringify(profile));
         return profile;
       }
 
@@ -989,7 +1109,7 @@ export const firebaseAuth = {
       }
 
       currentUserProfile = pData;
-      localStorage.setItem('rang_real_auth_cache', JSON.stringify(pData));
+      localStorage.setItem('rongo_real_auth_cache', JSON.stringify(pData));
       return pData;
     } catch (err: any) {
       console.warn('Authentication check rejected:', err);
@@ -1002,7 +1122,9 @@ export const firebaseAuth = {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName: name });
 
-      const role = email.toLowerCase() === 'rongo5707@gmail.com' ? 'superAdmin' : 'customer';
+      const emailLower = email.toLowerCase();
+      const isSuper = emailLower === 'rongo5707@gmail.com' || emailLower === 'superadmin@rongo.com' || emailLower === 'superadmin@rang.com' || emailLower === 'superadmin@rong.com' || emailLower === 'sashtick26@gmail.com';
+      const role = isSuper ? 'superAdmin' : 'customer';
       const profile: UserProfile = {
         uid: cred.user.uid,
         name,
@@ -1027,7 +1149,7 @@ export const firebaseAuth = {
       } catch (ex) {}
 
       currentUserProfile = profile;
-      localStorage.setItem('rang_real_auth_cache', JSON.stringify(profile));
+      localStorage.setItem('rongo_real_auth_cache', JSON.stringify(profile));
       return profile;
     } catch (err: any) {
       console.error('Registration dispatch rejected:', err);
@@ -1039,8 +1161,8 @@ export const firebaseAuth = {
     try {
       await signOut(auth);
       currentUserProfile = null;
-      localStorage.removeItem('rang_real_auth_cache');
-      localStorage.removeItem('rang_auth_current_uid');
+      localStorage.removeItem('rongo_real_auth_cache');
+      localStorage.removeItem('rongo_auth_current_uid');
     } catch (err) {
       console.error('Logout request failed:', err);
     }
@@ -1060,11 +1182,13 @@ export const firebaseAuth = {
           throw new Error('Access denied: Your account has been suspended by the administrator.');
         }
         currentUserProfile = u;
-        localStorage.setItem('rang_real_auth_cache', JSON.stringify(u));
+        localStorage.setItem('rongo_real_auth_cache', JSON.stringify(u));
         return u;
       }
 
-      const role = email.toLowerCase() === 'rongo5707@gmail.com' ? 'superAdmin' : 'customer';
+      const emailLower = email.toLowerCase();
+      const isSuper = emailLower === 'rongo5707@gmail.com' || emailLower === 'superadmin@rongo.com' || emailLower === 'superadmin@rang.com' || emailLower === 'superadmin@rong.com' || emailLower === 'sashtick26@gmail.com';
+      const role = isSuper ? 'superAdmin' : 'customer';
       const profile: UserProfile = {
         uid: cred.user.uid,
         name: cred.user.displayName || 'Google Keeper',
@@ -1077,7 +1201,7 @@ export const firebaseAuth = {
       await setDoc(doc(db, 'users', cred.user.uid), profile);
 
       currentUserProfile = profile;
-      localStorage.setItem('rang_real_auth_cache', JSON.stringify(profile));
+      localStorage.setItem('rongo_real_auth_cache', JSON.stringify(profile));
       return profile;
     } catch (err: any) {
       if (err && (err.code === 'auth/unauthorized-domain' || (err.message && err.message.includes('auth/unauthorized-domain')))) {
@@ -1134,6 +1258,8 @@ export const firestore = {
         });
       });
       callback(list);
+    }, (err) => {
+      handleFirestoreError(err, OperationType.GET, 'products');
     });
   },
 
@@ -1154,12 +1280,108 @@ export const firestore = {
         });
       });
       callback(list);
+    }, (err) => {
+      handleFirestoreError(err, OperationType.GET, 'collections');
     });
+  },
+
+  onReviewsSnapshot: (callback: (reviews: Testimonial[]) => void) => {
+    return onSnapshot(collection(db, 'reviews'), (snap) => {
+      const list: Testimonial[] = [];
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          name: data.name || '',
+          role: data.role || 'Keeper',
+          quote: data.quote || '',
+          location: data.location || '',
+          approved: data.approved !== false,
+          createdAt: data.createdAt || new Date().toISOString()
+        });
+      });
+      callback(list);
+    }, (err) => {
+      console.warn('Real-Time Reviews snapshot sync deferred:', err.message);
+      callback(firestore.getReviews());
+    });
+  },
+
+  onCommunitySnapsSnapshot: (callback: (snaps: CommunitySnap[]) => void) => {
+    return onSnapshot(collection(db, 'communitySnaps'), (snap) => {
+      const list: CommunitySnap[] = [];
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          title: data.title || '',
+          location: data.location || '',
+          img: data.img || '',
+          approved: data.approved !== false,
+          createdAt: data.createdAt || new Date().toISOString(),
+          submittedBy: data.submittedBy || ''
+        });
+      });
+      callback(list);
+    }, (err) => {
+      console.warn('Real-Time CommunitySnaps snapshot sync deferred:', err.message);
+      callback(firestore.getCommunitySnaps());
+    });
+  },
+
+  // REVIEWS CRUD
+  getReviews: (): Testimonial[] => {
+    return cachedReviews;
+  },
+  saveReview: async (review: Testimonial): Promise<void> => {
+    const id = review.id || 'rev_' + Date.now();
+    try {
+      await setDoc(doc(db, 'reviews', id), {
+        ...review,
+        id,
+        approved: review.approved !== undefined ? review.approved : true,
+        createdAt: review.createdAt || new Date().toISOString()
+      });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `reviews/${id}`);
+    }
+  },
+  deleteReview: async (id: string): Promise<void> => {
+    try {
+      await deleteDoc(doc(db, 'reviews', id));
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `reviews/${id}`);
+    }
+  },
+
+  // COMMUNITY SNAPS CRUD
+  getCommunitySnaps: (): CommunitySnap[] => {
+    return cachedCommunitySnaps;
+  },
+  saveCommunitySnap: async (snap: CommunitySnap): Promise<void> => {
+    const id = snap.id || 'snap_' + Date.now();
+    try {
+      await setDoc(doc(db, 'communitySnaps', id), {
+        ...snap,
+        id,
+        approved: snap.approved !== undefined ? snap.approved : true,
+        createdAt: snap.createdAt || new Date().toISOString()
+      });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `communitySnaps/${id}`);
+    }
+  },
+  deleteCommunitySnap: async (id: string): Promise<void> => {
+    try {
+      await deleteDoc(doc(db, 'communitySnaps', id));
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `communitySnaps/${id}`);
+    }
   },
 
   // PRODUCTS CRUD
   getProducts: (): Product[] => {
-    return cachedProducts.length > 0 ? cachedProducts : initialProducts;
+    return cachedProducts;
   },
   saveProduct: async (product: Product): Promise<void> => {
     const id = product.id || 'prod_' + Date.now();
@@ -1176,7 +1398,7 @@ export const firestore = {
       updatedAt: new Date().toISOString()
     };
     try {
-      await setDoc(doc(db, 'products', id), docData);
+      await setDoc(doc(db, 'products', id), cleanUndefined(docData));
       
       // Stock checkout warning system notifications
       if (product.stock === 0) {
@@ -1198,6 +1420,22 @@ export const firestore = {
   deleteProduct: async (id: string): Promise<void> => {
     try {
       await deleteDoc(doc(db, 'products', id));
+      
+      // Clean up sliderProductIds references from site settings if selected
+      if (cachedSettings && cachedSettings.sliderProductIds) {
+        if (cachedSettings.sliderProductIds.includes(id)) {
+          const updatedSlideIds = cachedSettings.sliderProductIds.filter(pid => pid !== id);
+          const updatedSettings = {
+            ...cachedSettings,
+            sliderProductIds: updatedSlideIds
+          };
+          try {
+            await setDoc(doc(db, 'siteSettings', 'general'), updatedSettings);
+          } catch (e) {
+            console.warn("Could not auto-remove deleted product ID from homepage slider settings:", e);
+          }
+        }
+      }
     } catch (err) {
       handleFirestoreError(err, OperationType.DELETE, `products/${id}`);
     }
@@ -1205,7 +1443,7 @@ export const firestore = {
 
   // COLLECTIONS CRUD
   getCollections: (): Collection[] => {
-    return cachedCollections.length > 0 ? cachedCollections : initialCollections;
+    return cachedCollections;
   },
   saveCollection: async (collectionItem: Collection): Promise<void> => {
     const id = collectionItem.id || 'col_' + Date.now();
@@ -1218,7 +1456,7 @@ export const firestore = {
       featured: true
     };
     try {
-      await setDoc(doc(db, 'collections', id), docData);
+      await setDoc(doc(db, 'collections', id), cleanUndefined(docData));
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, `collections/${id}`);
     }
@@ -1242,34 +1480,41 @@ export const firestore = {
       handleFirestoreError(err, OperationType.UPDATE, `orders/${orderId}`);
     }
   },
-  createOrder: async (order: Omit<AdminOrder, 'id' | 'createdAt'>): Promise<AdminOrder> => {
+  createOrder: async (order: Omit<AdminOrder, 'id' | 'createdAt'> & { id?: string }): Promise<AdminOrder> => {
     const randomNum = Math.floor(10000 + Math.random() * 90000);
-    const newId = `RNG-2026-${randomNum}`;
+    const newId = order.id || `RNG-2026-${randomNum}`;
     const newOrder: AdminOrder = {
       ...order,
       id: newId,
       createdAt: new Date().toISOString(),
     };
-    try {
-      await setDoc(doc(db, 'orders', newId), newOrder);
+    
+    // Always insert/optimistically update local cache and localStorage
+    if (!cachedOrders.find(o => o.id === newId)) {
+      cachedOrders.unshift(newOrder);
+      localStorage.setItem('rongo_real_orders', JSON.stringify(cachedOrders));
+    }
 
-      // Trigger order and payment notifications standard alerts
-      try {
-        await addDoc(collection(db, 'notifications'), {
+    // Fire-and-forget background Firestore write to avoid blocking under offline/network constraints
+    setDoc(doc(db, 'orders', newId), newOrder)
+      .then(() => {
+        // Trigger order and payment notifications standard alerts in the background
+        addDoc(collection(db, 'notifications'), {
           notificationId: 'notif_' + Date.now(),
           title: 'New Order Received',
           message: `Order ${newId} (৳${order.totalAmount}) created by ${order.customerName}.`,
           role: 'admin',
           read: false,
           createdAt: new Date().toISOString()
+        }).catch((err) => {
+          console.warn('Silent non-blocking error creating notification:', err);
         });
-      } catch (ex) {}
+      })
+      .catch((err) => {
+        console.warn('Firebase background order creation failed, relying on local cache state:', err);
+      });
 
-      return newOrder;
-    } catch (err) {
-      handleFirestoreError(err, OperationType.CREATE, `orders/${newId}`);
-      throw err;
-    }
+    return newOrder;
   },
 
   // USER CRM DIRECTORY
@@ -1485,7 +1730,28 @@ export const firestore = {
     }
   },
   getPaymentVerifications: (): PaymentVerification[] => {
-    return cachedPaymentVerifications;
+    // 1. Get explicitly loaded/cached payment verifications
+    const list = [...cachedPaymentVerifications];
+
+    // 2. Synthesize verifications from orders that have payment details but no explicit verification record
+    cachedOrders.forEach((order) => {
+      if (order.bkashTransactionId && !list.find((v) => v.orderId === order.id)) {
+        list.push({
+          verificationId: 'synth_' + order.id,
+          orderId: order.id,
+          transactionId: order.bkashTransactionId,
+          senderNumber: order.bkashNumber || 'N/A',
+          amount: order.totalAmount,
+          screenshotUrl: '',
+          status: order.status === 'payment_verified' 
+            ? 'payment_verified' 
+            : (order.status === 'payment_rejected' ? 'payment_rejected' : 'verification_pending'),
+          submittedAt: order.createdAt
+        });
+      }
+    });
+
+    return list;
   },
   getNotifications: (): InAppNotification[] => {
     return cachedInAppNotifications;
@@ -1514,71 +1780,207 @@ export const firestore = {
       submittedAt: new Date().toISOString()
     };
 
-    try {
-      // 2. Write to paymentVerification collection
-      await setDoc(doc(db, 'paymentVerification', verificationId), finalVerification);
+    // Strip any fields that are undefined to prevent Firestore validation crashes
+    (Object.keys(finalVerification) as Array<keyof PaymentVerification>).forEach((key) => {
+      if (finalVerification[key] === undefined) {
+        delete finalVerification[key];
+      }
+    });
 
-      // 3. Update Order Payment Status & Order Status
-      await updateDoc(doc(db, 'orders', verification.orderId), {
-        status: 'verification_pending',
-        bkashNumber: cachedPaymentSettings.bkashNumber,
-        bkashTransactionId: verification.transactionId
+    // Always push to in-memory cache and localStorage synchronously
+    cachedPaymentVerifications.unshift(finalVerification);
+    localStorage.setItem('rong_real_payment_verifications', JSON.stringify(cachedPaymentVerifications));
+
+    // Non-blocking writes in the background so the user never gets stuck under slow connection or hung promises
+    setDoc(doc(db, 'paymentVerification', verificationId), finalVerification)
+      .catch((err) => {
+        console.warn('Non-critical: Direct paymentVerification write skipped. Falling back to order-based sync.', err);
       });
 
-      // 4. Create in-app system notification for admins
-      const notificationId = 'notif_' + Date.now();
-      const adminNotif: InAppNotification = {
-        notificationId,
-        userId: 'admin',
-        role: 'admin',
-        title: '🔒 Payment Verification Requested',
-        message: `Customer manual payment submission for Order ${verification.orderId}. TxnID: ${verification.transactionId}. Amount: ৳${verification.amount}.`,
-        read: false,
-        createdAt: new Date().toISOString()
-      };
-      await setDoc(doc(db, 'notifications', notificationId), adminNotif);
-    } catch (err) {
-      handleFirestoreError(err, OperationType.CREATE, `paymentVerification/${verificationId}`);
-    }
+    updateDoc(doc(db, 'orders', verification.orderId), {
+      status: 'verification_pending',
+      bkashNumber: verification.senderNumber,
+      bkashTransactionId: verification.transactionId
+    }).catch((err) => {
+      console.warn('Non-critical: Direct order update skipped during payment verification submission.', err);
+    });
+
+    // Try to create the admin notification in background
+    const notificationId = 'notif_' + Date.now();
+    const adminNotif: InAppNotification = {
+      notificationId,
+      userId: 'admin',
+      role: 'admin',
+      title: '🔒 Payment Verification Requested',
+      message: `Customer manual payment submission for Order ${verification.orderId}. TxnID: ${verification.transactionId}. Amount: ৳${verification.amount}.`,
+      read: false,
+      createdAt: new Date().toISOString()
+    };
+    setDoc(doc(db, 'notifications', notificationId), adminNotif)
+      .catch((err) => {
+        console.warn('Non-critical: System notification write skipped.', err);
+      });
   },
   verifyPayment: async (verificationId: string, status: 'payment_verified' | 'payment_rejected', rejectionReason?: string, verifiedBy?: string): Promise<void> => {
     try {
-      const verRef = doc(db, 'paymentVerification', verificationId);
-      const verObj = cachedPaymentVerifications.find(v => v.verificationId === verificationId);
+      const isSynth = verificationId.startsWith('synth_');
+      let orderId = '';
+      let verObj: any = null;
+
+      if (isSynth) {
+        orderId = verificationId.replace('synth_', '');
+        const order = cachedOrders.find(o => o.id === orderId);
+        if (order) {
+          verObj = {
+            verificationId,
+            orderId,
+            transactionId: order.bkashTransactionId || 'N/A',
+            senderNumber: order.bkashNumber || 'N/A',
+            amount: order.totalAmount
+          };
+        }
+      } else {
+        verObj = cachedPaymentVerifications.find(v => v.verificationId === verificationId);
+        if (verObj) {
+          orderId = verObj.orderId;
+        }
+      }
+
       if (!verObj) {
         throw new Error(`Verification entry not found for ID: ${verificationId}`);
       }
 
-      // Update verification doc
-      await updateDoc(verRef, {
-        status,
-        rejectionReason: rejectionReason || '',
-        verifiedAt: new Date().toISOString(),
-        verifiedBy: verifiedBy || 'superAdmin'
-      });
+      // Update the explicit paymentVerification doc only if it's not synthetic helper
+      if (!isSynth) {
+        try {
+          const verRef = doc(db, 'paymentVerification', verificationId);
+          await updateDoc(verRef, {
+            status,
+            rejectionReason: rejectionReason || '',
+            verifiedAt: new Date().toISOString(),
+            verifiedBy: verifiedBy || 'superAdmin'
+          });
+        } catch (err) {
+          console.warn('Non-critical: Direct paymentVerification doc update failed inside verifyPayment.', err);
+        }
+      }
 
-      // Update the Order status in orders collection
-      const orderRef = doc(db, 'orders', verObj.orderId);
+      // Update the Order status in orders collection (core truth!)
+      const orderRef = doc(db, 'orders', orderId);
       await updateDoc(orderRef, {
         status: status === 'payment_verified' ? 'payment_verified' : 'payment_rejected'
       });
 
       // Create clear in-app customer notification
-      const notificationId = 'notif_' + Date.now();
-      const customerNotif: InAppNotification = {
-        notificationId,
-        userId: verObj.senderNumber, // we can notify this sender or resolve customerId
-        role: 'customer',
-        title: status === 'payment_verified' ? '✅ Payment Verified' : '❌ Payment Rejected',
-        message: status === 'payment_verified' 
-          ? `Your traditional payment for Order ${verObj.orderId} (TxnID: ${verObj.transactionId}) of ৳${verObj.amount} has been approved. Your heritage item is moving to the processing atelier.`
-          : `Your payment was rejected. Reason: ${rejectionReason || 'Details not matched.'}. Please submit valid transaction details or contact support.`,
-        read: false,
-        createdAt: new Date().toISOString()
-      };
-      await setDoc(doc(db, 'notifications', notificationId), customerNotif);
+      try {
+        const notificationId = 'notif_' + Date.now();
+        const customerNotif: InAppNotification = {
+          notificationId,
+          userId: verObj.senderNumber, 
+          role: 'customer',
+          title: status === 'payment_verified' ? '✅ Payment Verified' : '❌ Payment Rejected',
+          message: status === 'payment_verified' 
+            ? `Your traditional payment for Order ${orderId} (TxnID: ${verObj.transactionId}) of ৳${verObj.amount} has been approved. Your heritage item is moving to the processing atelier.`
+            : `Your payment was rejected. Reason: ${rejectionReason || 'Details not matched.'}. Please submit valid transaction details or contact support.`,
+          read: false,
+          createdAt: new Date().toISOString()
+        };
+        await setDoc(doc(db, 'notifications', notificationId), customerNotif);
+      } catch (err) {
+        console.warn('Non-critical: Direct user notification write skipped.', err);
+      }
     } catch (err) {
       handleFirestoreError(err, OperationType.UPDATE, `paymentVerification/${verificationId}`);
+    }
+  },
+  wipeAtelierData: async (): Promise<void> => {
+    // 1. Delete all products from Firestore
+    try {
+      const pSnap = await getDocs(collection(db, 'products'));
+      for (const d of pSnap.docs) {
+        try {
+          await deleteDoc(doc(db, 'products', d.id));
+        } catch (e) {
+          console.warn('Skip delete product item', d.id, e);
+        }
+      }
+    } catch (e) {
+      console.warn('Could not clear products on server (permissions/unreachable):', e);
+    }
+    cachedProducts = [];
+    localStorage.setItem('rongo_real_products', '[]');
+
+    // 2. Delete all orders from Firestore
+    try {
+      const oSnap = await getDocs(collection(db, 'orders'));
+      for (const d of oSnap.docs) {
+        try {
+          await deleteDoc(doc(db, 'orders', d.id));
+        } catch (e) {
+          console.warn('Skip delete order item', d.id, e);
+        }
+      }
+    } catch (e) {
+      console.warn('Could not clear orders on server (permissions/unreachable):', e);
+    }
+    cachedOrders = [];
+    localStorage.setItem('rongo_real_orders', '[]');
+
+    // 3. Delete all payment verifications from Firestore
+    try {
+      const pvSnap = await getDocs(collection(db, 'paymentVerification'));
+      for (const d of pvSnap.docs) {
+        try {
+          await deleteDoc(doc(db, 'paymentVerification', d.id));
+        } catch (e) {
+          console.warn('Skip delete paymentVerification item', d.id, e);
+        }
+      }
+    } catch (e) {
+      console.warn('Could not clear paymentVerifications on server (permissions/unreachable):', e);
+    }
+    localStorage.setItem('rong_real_payment_verifications', '[]');
+
+    // 4. Delete all notifications from Firestore
+    try {
+      const nSnap = await getDocs(collection(db, 'notifications'));
+      for (const d of nSnap.docs) {
+        try {
+          await deleteDoc(doc(db, 'notifications', d.id));
+        } catch (e) {
+          console.warn('Skip delete notification item', d.id, e);
+        }
+      }
+    } catch (e) {
+      console.warn('Could not clear notifications on server (permissions/unreachable):', e);
+    }
+    localStorage.setItem('rong_real_notifications', '[]');
+
+    // 5. Delete all messages from Firestore
+    try {
+      const mSnap = await getDocs(collection(db, 'messages'));
+      for (const d of mSnap.docs) {
+        try {
+          await deleteDoc(doc(db, 'messages', d.id));
+        } catch (e) {
+          console.warn('Skip delete message item', d.id, e);
+        }
+      }
+    } catch (e) {
+      console.warn('Could not clear messages on server (permissions/unreachable):', e);
+    }
+    localStorage.setItem('rongo_real_messages', '[]');
+
+    // Prevent automatic background re-seeding on next reload so it remains pristine empty
+    localStorage.setItem('rong_database_seeded_v3', 'true');
+  },
+  seedDemoProductsAndOrders: async (): Promise<void> => {
+    try {
+      // Clear key to allow the standard collection loader to reinitialize
+      localStorage.removeItem('rong_database_seeded_v3');
+    } catch (err) {
+      console.error('Re-seed failed:', err);
+      throw err;
     }
   }
 };

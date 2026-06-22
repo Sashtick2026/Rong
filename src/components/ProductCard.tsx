@@ -1,7 +1,8 @@
 import React from 'react';
-import { Eye, Heart, ShoppingBag } from 'lucide-react';
+import { Eye, ShoppingBag } from 'lucide-react';
 import { Product } from '../types';
 import { motion } from 'motion/react';
+import { AnimatedHeart } from './AnimatedHeart';
 
 interface ProductCardProps {
   product: Product;
@@ -63,12 +64,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           }`}
           aria-label="Add to favorites"
         >
-          <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
+          <AnimatedHeart isWishlisted={isWishlisted} className="w-4 h-4" />
         </button>
 
         {/* Product image with slow hover zoom & subtle pan */}
         <img
-          src={product.image}
+          src={product.image || null}
           alt={product.name}
           referrerPolicy="no-referrer"
           className="w-full h-full object-cover transition-transform duration-1000 ease-out scale-102 group-hover:scale-108"

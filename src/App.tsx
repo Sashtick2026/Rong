@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ShoppingBag, Heart, ArrowRight, Grid, Filter, SlidersHorizontal, ChevronRight, 
-  ChevronLeft, Sparkles, Star, Calendar, RefreshCw, Send, CheckCircle2, BookmarkCheck, Share2, Feather
+  ChevronLeft, Sparkles, Star, Calendar, RefreshCw, Send, CheckCircle2, BookmarkCheck, Share2, Feather, Clock
 } from 'lucide-react';
 
 // Import our custom data and subcomponents
 import { testimonials } from './data';
-import { Product, Collection, CartItem } from './types';
+import { Product, Collection, CartItem, Testimonial, CommunitySnap } from './types';
 import { Header } from './components/Header';
 import { ProductCard } from './components/ProductCard';
 import { CartDrawer } from './components/CartDrawer';
@@ -19,6 +19,7 @@ import {
 import { HeroInteractive } from './components/HeroInteractive';
 import { HomeSections } from './components/HomeSections';
 import { AmbientFloatingAtmosphere } from './components/AmbientFloatingAtmosphere';
+import { AnimatedHeart } from './components/AnimatedHeart';
 
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -51,6 +52,10 @@ export default function App() {
   const [isWishlistOpen, setIsWishlistOpen] = useState<boolean>(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   
+  // Payment Pending Popup States
+  const [showPendingPopup, setShowPendingPopup] = useState<boolean>(false);
+  const [pendingOrderId, setPendingOrderId] = useState<string>('');
+  
   // Shop Filters
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [priceFilter, setPriceFilter] = useState<number>(500);
@@ -61,6 +66,13 @@ export default function App() {
   const [newsletterEmail, setNewsletterEmail] = useState<string>('');
   const [newsletterSubmitted, setNewsletterSubmitted] = useState<boolean>(false);
 
+  // Review submission inputs
+  const [isReviewFormOpen, setIsReviewFormOpen] = useState<boolean>(false);
+  const [reviewName, setReviewName] = useState<string>('');
+  const [reviewQuote, setReviewQuote] = useState<string>('');
+  const [reviewLocation, setReviewLocation] = useState<string>('');
+  const [reviewSubmitted, setReviewSubmitted] = useState<boolean>(false);
+
   // Details Page state helper inside Detail View
   const [selectedDetailPhoto, setSelectedDetailPhoto] = useState<string>('');
 
@@ -69,6 +81,8 @@ export default function App() {
   // ----------------------------------------------------
   const [storeProducts, setStoreProducts] = useState<Product[]>([]);
   const [storeCollections, setStoreCollections] = useState<Collection[]>([]);
+  const [storeReviews, setStoreReviews] = useState<Testimonial[]>([]);
+  const [storeSnaps, setStoreSnaps] = useState<CommunitySnap[]>([]);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot'>('login');
@@ -85,8 +99,11 @@ export default function App() {
       }
 
       if (firebaseUser) {
+        // Close auth overlay immediately upon detecting authenticated state
+        setIsAuthModalOpen(false);
+
         // 1. Immediately apply cached credentials if available for instant UI rendering
-        const cached = localStorage.getItem('rang_real_auth_cache');
+        const cached = localStorage.getItem('rongo_real_auth_cache');
         if (cached) {
           try {
             const parsed = JSON.parse(cached);
@@ -101,7 +118,7 @@ export default function App() {
           if (docSnap.exists()) {
             const freshProfile = docSnap.data() as UserProfile;
             setCurrentUser(freshProfile);
-            localStorage.setItem('rang_real_auth_cache', JSON.stringify(freshProfile));
+            localStorage.setItem('rongo_real_auth_cache', JSON.stringify(freshProfile));
           } else {
             // Construct fallback profile if the Firestore document doesn't exist yet
             const activeProfile = firebaseAuth.getCurrentUser();
@@ -130,10 +147,56 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // Secure route guide: block unauthorized customers from accessing the administrator dashboard
+    if (currentPage === 'admin-dashboard') {
+      const isAuthorized = currentUser && (currentUser.role === 'superAdmin' || currentUser.role === 'admin');
+      if (!isAuthorized) {
+        triggerToast('Access Denied: You do not have permission to view the admin dashboard.');
+        setCurrentPage('home');
+        return;
+      }
+    }
     // Sync boutique counters whenever pages drift to inherit fresh edits
     setStoreProducts(firestore.getProducts());
     setStoreCollections(firestore.getCollections());
-  }, [currentPage]);
+  }, [currentPage, currentUser]);
+
+  // Dynamic SEO Page Title Orchestrator
+  useEffect(() => {
+    if (selectedProduct) {
+      document.title = `${selectedProduct.name} (${selectedProduct.banglaName || ''}) — Curated Craft | রঙ (Rongo) Heritage`;
+      return;
+    }
+
+    switch (currentPage) {
+      case 'home':
+        document.title = 'রঙ (Rongo) Heritage — Limited Handmade Bengal Lifestyle & Accessories Curation';
+        break;
+      case 'shop':
+        document.title = 'Curated Craft Collection & Handlooms | রঙ (Rongo) Heritage';
+        break;
+      case 'collections':
+        document.title = 'Signature Series & Heritable Lineages | রঙ (Rongo) Heritage';
+        break;
+      case 'about':
+        document.title = 'Our Slow Craft Manifesto & Atelier Philosophy | রঙ (Rongo) Heritage';
+        break;
+      case 'journal':
+        document.title = 'Bengal Archives & Handloom Rhythm Chronicles | রঙ (Rongo) Heritage';
+        break;
+      case 'contact':
+        document.title = 'Atelier Appointments & Inquiries | রঙ (Rongo) Heritage';
+        break;
+      case 'profile':
+        document.title = 'Collector Profile Control | রঙ (Rongo) Heritage';
+        break;
+      case 'admin-dashboard':
+        document.title = 'Keeper Curation Console | রঙ (Rongo) Heritage';
+        break;
+      default:
+        document.title = 'রঙ (Rongo) Heritage';
+    }
+  }, [currentPage, selectedProduct]);
 
   // Real-time Catalog Synchronizer
   useEffect(() => {
@@ -146,9 +209,19 @@ export default function App() {
       setStoreCollections(collections);
     }) : () => {};
 
+    const unsubscribeReviews = firestore.onReviewsSnapshot ? firestore.onReviewsSnapshot((reviews) => {
+      setStoreReviews(reviews);
+    }) : () => {};
+
+    const unsubscribeSnaps = firestore.onCommunitySnapsSnapshot ? firestore.onCommunitySnapsSnapshot((snaps) => {
+      setStoreSnaps(snaps);
+    }) : () => {};
+
     return () => {
       unsubscribeProducts();
       unsubscribeCollections();
+      unsubscribeReviews();
+      unsubscribeSnaps();
     };
   }, []);
 
@@ -304,7 +377,7 @@ export default function App() {
           >
             {/* Breadcrumb row */}
             <div className="flex items-center gap-2 text-xs text-brand-clay mb-8">
-              <button onClick={() => setSelectedProduct(null)} className="hover:text-brand-charcoal transition-colors font-medium">Rang Curation</button>
+              <button onClick={() => setSelectedProduct(null)} className="hover:text-brand-charcoal transition-colors font-medium">Rongo Curation</button>
               <ChevronRight className="w-3 h-3" />
               <button 
                 onClick={() => {
@@ -326,8 +399,8 @@ export default function App() {
               <div className="lg:col-span-7 space-y-4">
                 <div className="relative aspect-[3/4] bg-brand-beige/30 rounded-2xl overflow-hidden border border-brand-clay/15">
                   <img
-                    src={selectedDetailPhoto}
-                    alt={selectedProduct.name}
+                    src={selectedDetailPhoto || null}
+                    alt={selectedProduct?.name}
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover transition-all duration-700"
                   />
@@ -350,7 +423,7 @@ export default function App() {
                           selectedDetailPhoto === img ? 'border-brand-terracotta ring-1 ring-brand-terracotta' : 'border-brand-clay/25 opacity-70 hover:opacity-100'
                         }`}
                       >
-                        <img src={img} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                        <img src={img || null} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                       </button>
                     ))}
                   </div>
@@ -446,7 +519,7 @@ export default function App() {
                         : 'border-brand-clay/30 text-brand-charcoal/70 hover:text-brand-terracotta'
                     }`}
                   >
-                    <Heart className={`w-4 h-4 ${isProductWishlisted(selectedProduct) ? 'fill-current' : ''}`} />
+                    <AnimatedHeart isWishlisted={isProductWishlisted(selectedProduct)} className="w-4 h-4" />
                   </button>
                 </div>
 
@@ -499,6 +572,7 @@ export default function App() {
               >
                 {/* Premium Cinematic Hero Section with 3D Depth System and Mouse Interactiveness */}
                 <HeroInteractive 
+                  products={storeProducts}
                   onOpenProductDetails={handleOpenProductDetails}
                   onExploreShop={() => {
                     setCategoryFilter('all');
@@ -521,40 +595,164 @@ export default function App() {
                   isProductWishlisted={isProductWishlisted}
                   setCategoryFilter={setCategoryFilter}
                   setCurrentPage={setCurrentPage}
+                  communitySnaps={storeSnaps}
+                  onSubmitSnap={async (title, location, img) => {
+                    if (firestore.saveCommunitySnap) {
+                      await firestore.saveCommunitySnap({ id: '', title, location, img, approved: false });
+                    }
+                  }}
                 />
 
                 {/* Complementary Keepsakes & Testimonials Block */}
                 <section className="py-16 sm:py-24 bg-brand-beige/25 border-t border-b border-brand-clay/10">
                   <div className="max-w-5xl mx-auto px-4">
-                    <div className="text-center mb-12 sm:mb-16">
-                      <span className="text-[11px] font-sans font-bold tracking-widest text-brand-terracotta uppercase">Keeper Reviews</span>
-                      <h2 className="font-serif text-3xl font-medium text-brand-charcoal tracking-tight">Voices of the Keepers</h2>
+                    <div className="text-center mb-10 sm:mb-14">
+                      <span className="text-[11px] font-sans font-bold tracking-widest text-brand-terracotta uppercase">Patron Reviews</span>
+                      <h2 className="font-serif text-3xl font-medium text-brand-charcoal tracking-tight mt-1">Client Testimonials</h2>
+                      <p className="text-[11px] text-brand-clay font-sans mt-1.5 mb-5">
+                        Heartfelt narratives and reviews shared by our actual customers and collectors.
+                      </p>
+                      <button
+                        onClick={() => setIsReviewFormOpen(!isReviewFormOpen)}
+                        className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-bold tracking-widest text-brand-olive hover:text-brand-charcoal uppercase border border-[#B49275]/30 hover:border-brand-charcoal hover:bg-brand-bg/60 px-4 py-2 rounded-lg transition-all duration-300 pointer-events-auto"
+                      >
+                        {isReviewFormOpen ? 'Close Form' : 'Write a Review'}
+                      </button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                      {testimonials.map((test) => (
-                        <div 
-                          key={test.id} 
-                          className="bg-brand-bg border border-brand-clay/15 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-sm relative overflow-hidden"
+                    {/* Review Panel Form */}
+                    <AnimatePresence>
+                      {isReviewFormOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mb-12 overflow-hidden max-w-md mx-auto bg-brand-bg border border-brand-clay/15 rounded-2xl p-6 sm:p-8 shadow-sm"
                         >
-                          {/* Corner deco */}
-                          <CornerOrnament position="top-left" />
-                          <span className="text-4xl font-serif text-brand-terracotta/25 absolute top-4 right-4 font-bold">“</span>
-                          
-                          <p className="text-xs sm:text-sm text-brand-charcoal/80 italic leading-relaxed text-justify-custom mb-6 font-serif relative">
-                            {test.quote}
-                          </p>
+                          <h3 className="font-serif text-sm font-bold text-brand-charcoal mb-4 text-center tracking-tight text-brand-olive uppercase">Write Your Review</h3>
+                          {reviewSubmitted ? (
+                            <div className="text-center py-6">
+                              <span className="text-[#5B6349] font-serif font-bold text-sm block">Review Submitted!</span>
+                              <p className="text-xs text-brand-clay mt-2 leading-relaxed">
+                                Thank you for supporting traditional heritage! Your voice has been saved and will appear in our carousel once validated by our coordinators.
+                              </p>
+                              <button
+                                onClick={() => { setReviewSubmitted(false); setReviewName(''); setReviewQuote(''); setReviewLocation(''); }}
+                                className="mt-4 text-[10px] uppercase tracking-widest font-bold text-brand-olive hover:underline"
+                              >
+                                Write Another Review
+                              </button>
+                            </div>
+                          ) : (
+                            <form 
+                              onSubmit={async (e) => {
+                                e.preventDefault();
+                                if (!reviewName || !reviewQuote) return;
+                                if (firestore.saveReview) {
+                                  await firestore.saveReview({
+                                    id: 'rev_' + Date.now(),
+                                    name: reviewName,
+                                    role: 'Global Patron',
+                                    quote: reviewQuote,
+                                    location: reviewLocation || 'Atelier Patrons',
+                                    approved: false
+                                  });
+                                }
+                                setReviewSubmitted(true);
+                              }}
+                              className="space-y-4 text-xs"
+                            >
+                              <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-brand-olive mb-1">
+                                  Your Name *
+                                </label>
+                                <input
+                                  type="text"
+                                  required
+                                  value={reviewName}
+                                  onChange={(e) => setReviewName(e.target.value)}
+                                  placeholder="e.g., Anika Rahman"
+                                  className="w-full px-3 py-2 bg-[#FAF7F2] border border-brand-clay/20 rounded-lg text-brand-charcoal focus:ring-1 focus:ring-brand-terracotta focus:outline-none text-xs"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-brand-olive mb-1">
+                                  Your Coordinates / Location
+                                </label>
+                                <input
+                                  type="text"
+                                  value={reviewLocation}
+                                  onChange={(e) => setReviewLocation(e.target.value)}
+                                  placeholder="e.g., Sylhet, Bangladesh"
+                                  className="w-full px-3 py-2 bg-[#FAF7F2] border border-brand-clay/20 rounded-lg text-brand-charcoal focus:ring-1 focus:ring-brand-terracotta focus:outline-none text-xs"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-brand-olive mb-1">
+                                  Your Review Letter *
+                                </label>
+                                <textarea
+                                  required
+                                  rows={3}
+                                  value={reviewQuote}
+                                  onChange={(e) => setReviewQuote(e.target.value)}
+                                  placeholder="e.g., The handwoven Jamdani is a work of pure art. Excellent touch and beautiful storytelling craftsmanship."
+                                  className="w-full px-3 py-2 bg-[#FAF7F2] border border-brand-clay/20 rounded-lg text-brand-charcoal focus:ring-1 focus:ring-brand-terracotta focus:outline-none text-xs leading-relaxed"
+                                />
+                              </div>
+                              <button
+                                type="submit"
+                                className="w-full py-2 bg-[#2D2A26] hover:bg-[#403B37] text-white font-semibold tracking-wider hover:shadow-xs transition-all duration-300 rounded-lg uppercase text-[10px]"
+                              >
+                                Transmit Review
+                              </button>
+                            </form>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
-                          <div>
-                            <span className="h-[1px] w-8 bg-brand-clay block mb-3" />
-                            <h4 className="font-serif text-sm font-bold text-brand-charcoal">{test.name}</h4>
-                            <p className="text-[10px] text-brand-olive uppercase tracking-[0.16em] font-medium mt-0.5">
-                              {test.role} — <span className="text-brand-clay font-sans">{test.location}</span>
-                            </p>
+                    {(() => {
+                      const realApprovedReviews = storeReviews.filter(
+                        r => r && r.approved !== false && r.id !== '1' && r.id !== '2' && r.id !== '3'
+                      );
+                      if (realApprovedReviews.length > 0) {
+                        return (
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {realApprovedReviews.map((test) => (
+                              <div 
+                                key={test.id} 
+                                className="bg-brand-bg border border-brand-clay/15 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-sm relative overflow-hidden"
+                              >
+                                {/* Corner deco */}
+                                <CornerOrnament position="top-left" />
+                                <span className="text-4xl font-serif text-brand-terracotta/25 absolute top-4 right-4 font-bold">“</span>
+                                
+                                <p className="text-xs sm:text-sm text-[#2D2A26]/80 italic leading-relaxed text-justify mb-6 font-serif relative">
+                                  {test.quote}
+                                </p>
+
+                                <div>
+                                  <span className="h-[1px] w-8 bg-brand-clay block mb-3" />
+                                  <h4 className="font-serif text-sm font-bold text-brand-charcoal">{test.name}</h4>
+                                  <p className="text-[10px] text-brand-olive uppercase tracking-[0.16em] font-medium mt-0.5">
+                                    {test.role} — <span className="text-brand-clay font-sans">{test.location}</span>
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        );
+                      } else {
+                        return (
+                          <div className="text-center py-10 bg-brand-bg/50 border border-brand-clay/10 rounded-2xl p-6 sm:p-8 max-w-md mx-auto shadow-xs">
+                            <span className="text-brand-clay text-xs block font-serif italic">
+                              "No customer testimonials registered yet. When we are live, authentic feedback will be cataloged here."
+                            </span>
+                          </div>
+                        );
+                      }
+                    })()}
                   </div>
                 </section>
 
@@ -786,7 +984,7 @@ export default function App() {
                             <CornerOrnament position="bottom-right" />
                             
                             <div className="aspect-[16/10] sm:aspect-[4/3] rounded-xl overflow-hidden bg-brand-beige/40">
-                              <img src={col.image} alt={col.name} referrerPolicy="no-referrer" className="w-full h-full object-cover grayscale-[10%] hover:grayscale-0 transition-all duration-1000" />
+                              <img src={col.image || null} alt={col.name} referrerPolicy="no-referrer" className="w-full h-full object-cover grayscale-[10%] hover:grayscale-0 transition-all duration-1000" />
                             </div>
                             
                             {/* Small decorative label on poster */}
@@ -915,7 +1113,72 @@ export default function App() {
               setAuthMode('login');
               setIsAuthModalOpen(true);
             }}
+            onPaymentSuccess={(orderId) => {
+              setPendingOrderId(orderId);
+              setShowPendingPopup(true);
+            }}
           />
+        )}
+      </AnimatePresence>
+
+      {/* PAYMENT PENDING POPUP MODAL */}
+      <AnimatePresence>
+        {showPendingPopup && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div 
+              className="absolute inset-0 bg-brand-charcoal/60 backdrop-blur-sm"
+              onClick={() => setShowPendingPopup(false)}
+            />
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="relative bg-[#ECE7E1] border border-[#D2B591]/40 rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl text-center space-y-6 overflow-hidden"
+              style={{ contentVisibility: 'auto' }}
+            >
+              {/* Corner Ornaments */}
+              <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-brand-terracotta/40 rounded-tl-xl pointer-events-none" />
+              <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-brand-terracotta/40 rounded-tr-xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-brand-terracotta/40 rounded-bl-xl pointer-events-none" />
+              <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-brand-terracotta/40 rounded-br-xl pointer-events-none" />
+
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#D2B591]/15 text-brand-terracotta mb-2 animate-pulse">
+                <Clock className="w-9 h-9 stroke-[1.25]" />
+              </div>
+              
+              <div className="space-y-2">
+                <span className="text-[10px] font-sans font-semibold tracking-widest uppercase text-brand-terracotta block">bKash Transaction Registered</span>
+                <h3 className="font-serif text-2xl font-bold text-brand-charcoal leading-snug">
+                  Your Payment Verification is Pending
+                </h3>
+                {pendingOrderId && (
+                  <p className="text-[10px] text-brand-clay font-mono bg-[#ECE7E1]/50 py-1 px-3 rounded-md inline-block border border-brand-clay/10">
+                    Reference Code: {pendingOrderId}
+                  </p>
+                )}
+              </div>
+
+              <div className="text-xs text-brand-charcoal/80 leading-relaxed space-y-3 bg-[#f5f1eb] p-4 rounded-xl border border-brand-clay/10 text-left">
+                <p>
+                  We have successfully logged your bKash traditional transaction details into our heritage archives. 
+                </p>
+                <p>
+                  Our validation processes have been initiated. Once verified, your status will update automatically under your profile. You may close this window and continue browsing.
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  onClick={() => setShowPendingPopup(false)}
+                  className="w-full bg-brand-charcoal hover:bg-brand-terracotta text-[#ECE7E1] py-3.5 px-6 rounded-xl text-xs font-bold tracking-widest uppercase transition-colors duration-300"
+                >
+                  Conclude & Discover More
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
@@ -954,6 +1217,7 @@ export default function App() {
                   onSuccess={(user) => {
                     setCurrentUser(user);
                     setIsAuthModalOpen(false);
+                    triggerToast(`Login successful! Welcome back, ${user.name || 'Keeper'}.`);
                     if (user.role === 'superAdmin' || user.role === 'admin') {
                       setCurrentPage('admin-dashboard');
                     }
@@ -968,6 +1232,7 @@ export default function App() {
                   onSuccess={(user) => {
                     setCurrentUser(user);
                     setIsAuthModalOpen(false);
+                    triggerToast("Registration successful! Welcome to Rongo.");
                   }}
                   onClose={() => setIsAuthModalOpen(false)}
                   onAltAction={() => setAuthMode('login')}
@@ -1023,7 +1288,7 @@ export default function App() {
                 <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
                   {wishlist.map((item) => (
                     <div key={item.id} className="flex gap-3 items-center pb-3 border-b border-brand-clay/10">
-                      <img src={item.image} alt={item.name} referrerPolicy="no-referrer" className="w-12 h-16 object-cover bg-brand-beige/40 rounded border border-brand-clay/10" />
+                      <img src={item.image || null} alt={item.name} referrerPolicy="no-referrer" className="w-12 h-16 object-cover bg-brand-beige/40 rounded border border-brand-clay/10" />
                       <div className="flex-1">
                         <h4 className="font-serif text-sm font-medium text-brand-charcoal line-clamp-1 leading-snug">{item.name}</h4>
                         <span className="text-[10px] text-brand-clay block mt-0.5">{item.banglaName}</span>

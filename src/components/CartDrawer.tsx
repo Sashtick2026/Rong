@@ -13,6 +13,7 @@ interface CartDrawerProps {
   onClearCart: () => void;
   currentUser: any;
   onRequestLogin: () => void;
+  onPaymentSuccess?: (orderId: string) => void;
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
@@ -24,6 +25,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onClearCart,
   currentUser,
   onRequestLogin,
+  onPaymentSuccess,
 }) => {
   const [checkoutStep, setCheckoutStep] = React.useState<'cart' | 'shipping' | 'payment' | 'success'>('cart');
   const [couponCode, setCouponCode] = React.useState('');
@@ -52,11 +54,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [paymentError, setPaymentError] = React.useState('');
   const [copiesSuccessfully, setCopiesSuccessfully] = React.useState(false);
 
+  const validCartItems = React.useMemo(() => cartItems.filter(item => item && item.product), [cartItems]);
+
   const settings = firestore.getSettings();
   const liveShippingCost = settings.shippingCost ?? 25;
   const liveFreeShippingThreshold = settings.freeShippingThreshold ?? 500;
 
-  const subtotal = cartItems.reduce((acc, item) => {
+  const subtotal = validCartItems.reduce((acc, item) => {
     const discountedPrice = item.product.offerPercentage && item.product.offerPercentage > 0
       ? Math.round(item.product.price * (1 - item.product.offerPercentage / 100))
       : item.product.price;
@@ -168,31 +172,41 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     const newId = `RNG-2026-${randomNum}`;
 
     try {
-      // 1. Submit Payment verification record in simulated Firestore
+      // 1. Create actual order in simulated Firestore first
+      await firestore.createOrder({
+        id: newId,
+        customerId: currentUser ? currentUser.uid : 'anonymous',
+        customerName: shippingForm.fullName,
+        customerEmail: shippingForm.email,
+        products: validCartItems.map(item => ({
+          product: item.product,
+          quantity: item.quantity
+        })),
+        totalAmount: total,
+        status: 'verification_pending',
+        shippingAddress: shippingForm.address,
+        bkashNumber: paymentForm.senderNumber.trim(),
+        bkashTransactionId: paymentForm.transactionId.trim().toUpperCase()
+      });
+
+      // 2. Submit Payment verification record (which updates the newly created order)
       await firestore.submitPaymentVerification({
         orderId: newId,
         transactionId: paymentForm.transactionId.trim().toUpperCase(),
         senderNumber: paymentForm.senderNumber.trim(),
         amount: parseFloat(paymentForm.amount),
-        screenshotUrl: paymentForm.screenshotUrl || undefined
-      });
-
-      // 2. Create actual order in simulated Firestore
-      await firestore.createOrder({
-        customerId: currentUser ? currentUser.uid : 'anonymous',
-        customerName: shippingForm.fullName,
-        customerEmail: shippingForm.email,
-        products: cartItems.map(item => ({
-          product: item.product,
-          quantity: item.quantity
-        })),
-        totalAmount: total,
-        status: 'pending',
-        shippingAddress: shippingForm.address
+        screenshotUrl: paymentForm.screenshotUrl || ''
       });
 
       setOrderId(newId);
-      setCheckoutStep('success');
+      onClearCart();
+      if (onPaymentSuccess) {
+        onClose();
+        setCheckoutStep('cart');
+        onPaymentSuccess(newId);
+      } else {
+        setCheckoutStep('success');
+      }
     } catch (err: any) {
       console.error(err);
       setPaymentError(err.message || 'Verification submission error. Check Transaction ID duplicates.');
@@ -271,7 +285,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             {/* STEP 1: Main Cart View */}
             {checkoutStep === 'cart' && (
               <>
-                {cartItems.length === 0 ? (
+                {validCartItems.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center py-12">
                     <div className="w-16 h-16 rounded-full border border-brand-clay/30 bg-brand-beige/30 flex items-center justify-center text-brand-clay mb-4">
                       <X className="w-8 h-8 stroke-[1]" />
@@ -292,7 +306,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {cartItems.map((item) => (
+                    {validCartItems.map((item) => (
                       <div 
                         key={item.product.id} 
                         className="flex gap-4 pb-4 border-b border-brand-clay/10"
@@ -300,7 +314,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       >
                         <div className="w-20 h-24 flex-shrink-0 relative overflow-hidden bg-brand-beige/40 rounded-lg border border-brand-clay/10">
                           <img
-                            src={item.product.image}
+                            src={item.product.image || null}
                             alt={item.product.name}
                             referrerPolicy="no-referrer"
                             className="w-full h-full object-cover"
@@ -660,9 +674,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   </div>
 
                   <div>
-                    <span className="text-[9px] text-brand-olive/80 uppercase tracking-widest font-bold block mb-2">Purchased Curations</span>
+                    <span className="text-[9px] text-[#555555]/80 uppercase tracking-widest font-bold block mb-2">Purchased Curations</span>
                     <div className="space-y-2">
-                      {cartItems.map((item) => (
+                      {validCartItems.map((item) => (
                         <div key={item.product.id} className="flex justify-between text-xs text-brand-charcoal">
                           <span>{item.product.name} <span className="text-brand-clay/80 font-semibold flex-shrink-0">x{item.quantity}</span></span>
                           <span className="font-serif shrink-0">৳{item.product.price * item.quantity}</span>
@@ -709,7 +723,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           </div>
 
           {/* Footer Receipt Summary (Only shows during Step 1) */}
-          {checkoutStep === 'cart' && cartItems.length > 0 && (
+          {checkoutStep === 'cart' && validCartItems.length > 0 && (
             <div className="p-6 border-t border-brand-clay/15 bg-brand-beige/25">
               
               {/* Dynamic Coupon Input Code Field */}

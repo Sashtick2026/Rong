@@ -189,25 +189,25 @@ export const PuzzleManagementPanel: React.FC = () => {
               
               {/* Segment 1 */}
               <div className="relative overflow-hidden rounded-2xl border border-[#ECE7E1]/10 bg-brand-charcoal group">
-                <img src={p1} alt="Loom Segment" className="w-full h-full object-cover transition-transform duration-500 scale-100 hover:scale-110" referrerPolicy="no-referrer" />
+                <img src={p1 || null} alt="Loom Segment" className="w-full h-full object-cover transition-transform duration-500 scale-100 hover:scale-110" referrerPolicy="no-referrer" />
                 <div className="absolute top-2 left-2 bg-black/60 px-1.5 py-0.5 rounded text-[8px] text-white font-mono uppercase">Top-Left</div>
               </div>
 
               {/* Segment 2 */}
               <div className="relative overflow-hidden rounded-2xl border border-[#ECE7E1]/10 bg-brand-charcoal group">
-                <img src={p2} alt="Clay Segment" className="w-full h-full object-cover transition-transform duration-500 scale-100 hover:scale-110" referrerPolicy="no-referrer" />
+                <img src={p2 || null} alt="Clay Segment" className="w-full h-full object-cover transition-transform duration-500 scale-100 hover:scale-110" referrerPolicy="no-referrer" />
                 <div className="absolute top-2 right-2 bg-black/60 px-1.5 py-0.5 rounded text-[8px] text-white font-mono uppercase">Top-Right</div>
               </div>
 
               {/* Segment 3 */}
               <div className="relative overflow-hidden rounded-2xl border border-[#ECE7E1]/10 bg-brand-charcoal group">
-                <img src={p3} alt="Brass Segment" className="w-full h-full object-cover transition-transform duration-500 scale-100 hover:scale-110" referrerPolicy="no-referrer" />
+                <img src={p3 || null} alt="Brass Segment" className="w-full h-full object-cover transition-transform duration-500 scale-100 hover:scale-110" referrerPolicy="no-referrer" />
                 <div className="absolute bottom-2 left-2 bg-black/60 px-1.5 py-0.5 rounded text-[8px] text-white font-mono uppercase">Bottom-Left</div>
               </div>
 
               {/* Segment 4 */}
               <div className="relative overflow-hidden rounded-2xl border border-[#ECE7E1]/10 bg-brand-charcoal group">
-                <img src={p4} alt="Brush Segment" className="w-full h-full object-cover transition-transform duration-500 scale-100 hover:scale-110" referrerPolicy="no-referrer" />
+                <img src={p4 || null} alt="Brush Segment" className="w-full h-full object-cover transition-transform duration-500 scale-100 hover:scale-110" referrerPolicy="no-referrer" />
                 <div className="absolute bottom-2 right-2 bg-black/60 px-1.5 py-0.5 rounded text-[8px] text-white font-mono uppercase">Bottom-Right</div>
               </div>
 

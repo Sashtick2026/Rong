@@ -247,7 +247,7 @@ export const journalArticles: JournalArticle[] = [
     readTime: '8 min read',
     excerpt: 'Each saree is an active canvas. We step into the quiet atelier where designers spend hours breathing leafy organic patterns into sheets of delicate local silk.',
     content: [
-      'A hand-painted saree is not merely clothing; it is a moving spatial installation. The fabric reacts directly to the bearer\'s breath and movement, shifting the light over hand-applied pigments. In the Rang atelier, we treat every six yards as an unhurried, independent mural.',
+      'A hand-painted saree is not merely clothing; it is a moving spatial installation. The fabric reacts directly to the bearer\'s breath and movement, shifting the light over hand-applied pigments. In the Rongo atelier, we treat every six yards as an unhurried, independent mural.',
       'The process begins with pre-washing the Rajshahi silk with wild soapberries (Reetha) to eliminate natural protective starches. Once stretched over a giant wooden frames, Anila Kabir maps the geometry with a erasable earth chalk. No two sarees are ever identical; each follows the natural rhythm of the brush on that specific afternoon.',
       'Our pigments are extracted from local madder root (for warm terracotta reds), absolute indigo leaves, and boiled pomegranate skins (for mute yellow-greens). By utilizing natural vegetable binders, we ensure that the colors remain breathing, aging gracefully alongside the cotton threads.'
     ],
@@ -264,7 +264,7 @@ export const journalArticles: JournalArticle[] = [
     excerpt: 'Behind every swirling motif of our Shakuntala bangles lies an ancient code. Discover the circular geometries that represent infinity, life, and harvest.',
     content: [
       'Alpana is a historic vernacular art form, drawn on floors during seasonal festivals using rice paste and water. It is a fleeting art, designed to wash away under the steps of guests. Yet, its visual structures carry deep mathematical and natural wisdom.',
-      'The circular loops, leafy curves, and water wave patterns represent cycles of growth and celestial movements. In crafting our modern jewelry, Rang works hard to preserve these specific strokes on permanent surfaces. We recreate the brush pressure on raw metals and clay to keep the spirit alive.',
+      'The circular loops, leafy curves, and water wave patterns represent cycles of growth and celestial movements. In crafting our modern jewelry, Rongo works hard to preserve these specific strokes on permanent surfaces. We recreate the brush pressure on raw metals and clay to keep the spirit alive.',
       'By translating these dynamic ritual motifs into objects of daily luxury, we make sure that the ancient symbols of prosperity and cyclical gratitude are carried into modern lifestyles.'
     ],
     image: handmadeJewelryImg,
@@ -277,7 +277,7 @@ export const testimonials: Testimonial[] = [
     id: '1',
     name: 'Farhana Ahmed',
     role: 'Art Historian & Collector',
-    quote: '“Rang has transformed how we see our cultural goods. The Nilufer saree is not just clothing; it is a preserved narrative that carries the quiet wind of the riverbeds.”',
+    quote: '“Rongo has transformed how we see our cultural goods. The Nilufer saree is not just clothing; it is a preserved narrative that carries the quiet wind of the riverbeds.”',
     location: 'Dhaka'
   },
   {

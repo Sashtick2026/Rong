@@ -135,6 +135,35 @@
         "whatsapp": { "type": "string" }
       },
       "required": ["siteName"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Customer reviews and feedback shown in Voices of the Keepers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "quote": { "type": "string" },
+        "location": { "type": "string" },
+        "approved": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "quote"]
+    },
+    "CommunitySnap": {
+      "title": "CommunitySnap",
+      "description": "Keeper community snapshots dynamically curated and staged",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "location": { "type": "string" },
+        "img": { "type": "string" },
+        "approved": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "title", "img"]
     }
   },
   "firestore": {
@@ -169,6 +198,14 @@
     "siteSettings": {
       "schema": "SiteSettings",
       "description": "Website-wide CMS, contact values, footer paragraphs, and gateway payment settings"
+    },
+    "reviews": {
+      "schema": "Review",
+      "description": "Moderated review and feedback submissions from real customers"
+    },
+    "communitySnaps": {
+      "schema": "CommunitySnap",
+      "description": "Submitted community snapshots highlighting global craft curation"
     }
   }
 }

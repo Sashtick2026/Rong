@@ -47,7 +47,7 @@ export const AboutView: React.FC = () => {
             <CornerOrnament position="top-left" />
             <CornerOrnament position="bottom-right" />
             <img
-              src={settings.image || "https://images.unsplash.com/photo-1610701596007-11502861dcfa?q=80&w=800&auto=format&fit=crop"}
+              src={settings.image || null}
               alt="Narrative visual chronicle"
               referrerPolicy="no-referrer"
               className="w-full h-auto object-cover rounded-xl grayscale-[20%] hover:grayscale-0 transition-all duration-700"
@@ -192,7 +192,7 @@ export const JournalView: React.FC = () => {
             {/* Visual Thumbnail */}
             <div className="relative overflow-hidden aspect-[16/10] bg-brand-beige/35 rounded-xl border border-brand-clay/10 mb-5">
               <img
-                src={article.image}
+                src={article.image || null}
                 alt={article.title}
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
@@ -277,8 +277,8 @@ export const JournalView: React.FC = () => {
               {/* Large Image illustration inside modal */}
               <div className="relative overflow-hidden aspect-[16/9] rounded-xl border border-brand-clay/10 bg-brand-beige/40 mb-6 shadow-inner">
                 <img
-                  src={selectedArticle.image}
-                  alt={selectedArticle.title}
+                  src={selectedArticle?.image || null}
+                  alt={selectedArticle?.title}
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover"
                 />
@@ -293,7 +293,7 @@ export const JournalView: React.FC = () => {
 
               <div className="border-t border-brand-clay/15 mt-8 pt-4 flex justify-between items-center text-xs text-brand-clay">
                 <span>By: <strong>{selectedArticle.author}</strong></span>
-                <span className="font-mono text-[10px]">Rang Digital Archives / 2026</span>
+                <span className="font-mono text-[10px]">Rongo Digital Archives / 2026</span>
               </div>
             </motion.div>
           </div>
@@ -362,7 +362,7 @@ export const ContactView: React.FC = () => {
         <div className="lg:col-span-5 space-y-8">
           
           <div className="space-y-6">
-            <h2 className="font-serif text-2xl font-semibold mb-4 text-brand-charcoal">The Rang Atelier</h2>
+            <h2 className="font-serif text-2xl font-semibold mb-4 text-brand-charcoal">The Rongo Atelier</h2>
             <p className="text-xs sm:text-sm text-brand-charcoal/70 leading-relaxed text-justify-custom">
               Our principal workshop, curing chamber, and design archive is based in Dhaka. Visits by design curators and collectors are welcomed exclusively by pre-notified private appointments.
             </p>
@@ -382,7 +382,7 @@ export const ContactView: React.FC = () => {
               <Mail className="w-5 h-5 text-brand-olive mt-0.5 flex-shrink-0 stroke-[1.25]" />
               <div className="text-xs sm:text-sm">
                 <span className="font-semibold block text-brand-charcoal">General Dialog</span>
-                <a href="mailto:dialog@rangheritage.com" className="hover:text-brand-terracotta transition-colors">dialog@rangheritage.com</a>
+                <a href="mailto:dialog@rongoheritage.com" className="hover:text-brand-terracotta transition-colors">dialog@rongoheritage.com</a>
               </div>
             </div>
 
@@ -415,12 +415,12 @@ export const ContactView: React.FC = () => {
               <path d="M 0,45 C 70,40 120,70 180,60 C 240,50 280,95 300,90" strokeWidth="1.5" className="opacity-60" />
               {/* Star symbol for Gulshan */}
               <g transform="translate(160, 52)">
-                <circle cx="0" cy="0" r="4" fill="#C46E4E" stroke="#F7F2EA" strokeWidth="1" />
+                <circle cx="0" cy="0" r="4" fill="#C46E4E" stroke="#F2EEE5" strokeWidth="1" />
                 <text x="8" y="3" fontSize="8" fontFamily="var(--font-sans)" fontWeight="bold" fill="#2D2A26" className="tracking-widest">GULSHAN STUDIO</text>
               </g>
               {/* Star symbol for Sonargaon */}
               <g transform="translate(240, 78)">
-                <circle cx="0" cy="0" r="4" fill="#6A7450" stroke="#F7F2EA" strokeWidth="1" />
+                <circle cx="0" cy="0" r="4" fill="#6A7450" stroke="#F2EEE5" strokeWidth="1" />
                 <text x="8" y="3" fontSize="8" fontFamily="var(--font-sans)" fill="#2D2A26" className="opacity-70">SONARGAON LOOMS</text>
               </g>
             </svg>

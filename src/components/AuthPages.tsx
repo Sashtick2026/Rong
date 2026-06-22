@@ -41,8 +41,9 @@ export const RegisterPage: React.FC<AuthPageProps> = ({ onSuccess, onClose, onAl
       return;
     }
 
-    if (password.length < 6) {
-      setError('Security requirement: Password must comprise at least 6 characters.');
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      setError('Security requirement: Password must comprise at least 8 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#).');
       return;
     }
 
@@ -182,7 +183,7 @@ export const RegisterPage: React.FC<AuthPageProps> = ({ onSuccess, onClose, onAl
             className="mt-0.5 rounded border-brand-clay/40 text-brand-terracotta focus:ring-brand-terracotta"
           />
           <label htmlFor="agree-terms-checkbox" className="text-[11px] text-[#666666] leading-snug cursor-pointer font-sans">
-            I agree to traditional curation terms of service and allow Rang to safely archive my coordinates.
+            I agree to traditional curation terms of service and allow Rongo to safely archive my coordinates.
           </label>
         </div>
 
@@ -232,8 +233,6 @@ export const LoginPage: React.FC<LoginProps> = ({ onSuccess, onClose, onAltActio
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [authenticatedUser, setAuthenticatedUser] = useState<UserProfile | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,13 +250,7 @@ export const LoginPage: React.FC<LoginProps> = ({ onSuccess, onClose, onAltActio
     setLoading(true);
     try {
       const user = await firebaseAuth.login(email, password, rememberMe);
-      setAuthenticatedUser(user);
-      setShowSuccess(true);
-      
-      // Delay closing/triggering page change so traveler sees the gorgeous success popup
-      setTimeout(() => {
-        onSuccess(user);
-      }, 1600);
+      onSuccess(user);
     } catch (err: any) {
       setError(err?.message || 'Access coordinates denied.');
     } finally {
@@ -274,179 +267,115 @@ export const LoginPage: React.FC<LoginProps> = ({ onSuccess, onClose, onAltActio
         <AlpanaCircular size={150} />
       </div>
 
-      {showSuccess ? (
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-brand-terracotta/30 bg-brand-beige/50 text-brand-terracotta text-sm mb-3">
+          র
+        </div>
+        <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-brand-charcoal">Sign In to Rongo</h2>
+        <p className="text-[10px] tracking-widest text-brand-clay uppercase mt-1">Unlock designer panels & curators vault</p>
+      </div>
+
+      {error && (
         <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center py-6 flex flex-col items-center justify-center min-h-[300px]"
+          initial={{ opacity: 0, scale: 0.98 }} 
+          animate={{ opacity: 1, scale: 1 }} 
+          className="bg-brand-terracotta/10 border border-brand-terracotta/40 text-brand-charcoal py-3 px-4 rounded-xl text-xs flex items-start gap-2 mb-6"
         >
-          <div className="relative mb-6">
-            <motion.div 
-              initial={{ scale: 0 }}
-              animate={{ scale: [0, 1.2, 1] }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className="w-16 h-16 rounded-full bg-brand-olive/10 border border-brand-olive flex items-center justify-center text-brand-olive shadow-inner"
-            >
-              <CheckCircle2 className="w-9 h-9" />
-            </motion.div>
-            <motion.div 
-              className="absolute -inset-1 rounded-full border border-brand-olive/30 animate-ping pointer-events-none"
-              style={{ animationDuration: '2s' }}
+          <AlertCircle className="w-4.5 h-4.5 text-brand-terracotta flex-shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </motion.div>
+      )}
+
+      <form onSubmit={handleLogin} className="space-y-4">
+        <div>
+          <label className="block text-[10px] font-semibold tracking-wider text-brand-charcoal uppercase mb-1">
+            Email Coordinates
+          </label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-clay" />
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-brand-bg border border-brand-clay/40 rounded-xl pl-10 pr-4 py-3 text-xs sm:text-sm focus:outline-none focus:border-brand-terracotta placeholder-brand-clay"
+              placeholder="curator@rongoheritage.com"
             />
           </div>
+        </div>
 
-          <h3 className="font-serif text-2xl font-bold text-brand-charcoal mb-2">
-            Authentication Secured
-          </h3>
-          <p className="text-[10px] tracking-widest text-brand-olive uppercase font-bold mb-4">
-            Connection Code Verified
-          </p>
-          
-          <div className="bg-brand-beige/30 border border-brand-clay/10 rounded-2xl p-4 w-full max-w-sm space-y-2 mb-6 text-xs text-brand-charcoal">
-            <div className="flex justify-between items-center px-1">
-              <span className="text-[#666666] font-medium">Keeper Name:</span>
-              <span className="font-bold">{authenticatedUser?.name || 'Authorized Keeper'}</span>
-            </div>
-            <div className="flex justify-between items-center px-1">
-              <span className="text-[#666666] font-medium">Identity Code:</span>
-              <span className="font-mono text-[10px] truncate max-w-[150px]" title={authenticatedUser?.email || ''}>
-                {authenticatedUser?.email || 'authenticated'}
-              </span>
-            </div>
-            <div className="flex justify-between items-center px-1">
-              <span className="text-[#666666] font-medium">Clearance Level:</span>
-              <span className={`px-2 py-0.5 rounded-full text-[9px] uppercase tracking-wider font-bold ${
-                authenticatedUser?.role === 'superAdmin' 
-                  ? 'bg-brand-terracotta/10 text-brand-terracotta border border-brand-terracotta/25'
-                  : authenticatedUser?.role === 'admin'
-                    ? 'bg-brand-olive/10 text-brand-olive border border-brand-olive/25'
-                    : 'bg-brand-clay/10 text-brand-clay border border-brand-clay/25'
-              }`}>
-                {authenticatedUser?.role === 'superAdmin' ? 'Super Admin' : authenticatedUser?.role === 'admin' ? 'Admin' : 'Customer'}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-brand-clay font-medium italic animate-pulse">
-            <Sparkles className="w-3.5 h-3.5 text-brand-olive" />
-            <span>Establishing design panels & records workspace...</span>
-          </div>
-        </motion.div>
-      ) : (
-        <>
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-brand-terracotta/30 bg-brand-beige/50 text-brand-terracotta text-sm mb-3">
-              র
-            </div>
-            <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-brand-charcoal">Sign In to Rang</h2>
-            <p className="text-[10px] tracking-widest text-brand-clay uppercase mt-1">Unlock designer panels & curators vault</p>
-          </div>
-
-          {error && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.98 }} 
-              animate={{ opacity: 1, scale: 1 }} 
-              className="bg-brand-terracotta/10 border border-brand-terracotta/40 text-brand-charcoal py-3 px-4 rounded-xl text-xs flex items-start gap-2 mb-6"
-            >
-              <AlertCircle className="w-4.5 h-4.5 text-brand-terracotta flex-shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </motion.div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-[10px] font-semibold tracking-wider text-brand-charcoal uppercase mb-1">
-                Email Coordinates
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-clay" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-brand-bg border border-brand-clay/40 rounded-xl pl-10 pr-4 py-3 text-xs sm:text-sm focus:outline-none focus:border-brand-terracotta placeholder-brand-clay"
-                  placeholder="curator@rangheritage.com"
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="block text-[10px] font-semibold tracking-wider text-brand-charcoal uppercase">
-                  Secure Key Code
-                </label>
-                <button
-                  type="button"
-                  onClick={onForgotPassword}
-                  className="text-[10px] font-bold text-brand-terracotta hover:underline cursor-pointer uppercase tracking-wider"
-                >
-                  Forgot Code?
-                </button>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-clay" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-brand-bg border border-brand-clay/40 rounded-xl pl-10 pr-10 py-3 text-xs sm:text-sm focus:outline-none focus:border-brand-terracotta placeholder-brand-clay"
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-brand-clay hover:text-brand-charcoal"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-center gap-2">
-                <input
-                  id="remember-me"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="rounded border-brand-clay/40 text-brand-terracotta focus:ring-brand-terracotta"
-                />
-                <label htmlFor="remember-me" className="text-xs text-[#555555] cursor-pointer font-sans select-none">
-                  Keep signed in
-                </label>
-              </div>
-            </div>
-
+        <div>
+          <div className="flex justify-between items-center mb-1">
+            <label className="block text-[10px] font-semibold tracking-wider text-brand-charcoal uppercase">
+              Secure Key Code
+            </label>
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-brand-charcoal text-brand-bg hover:bg-brand-terracotta py-4 rounded-xl text-xs font-bold tracking-widest uppercase transition-colors duration-300 flex items-center justify-center gap-2 mt-2 shadow-md cursor-pointer"
+              type="button"
+              onClick={onForgotPassword}
+              className="text-[10px] font-bold text-brand-terracotta hover:underline cursor-pointer uppercase tracking-wider"
             >
-              {loading ? 'Authenticating...' : 'Establish Secure Connection'}
-            </button>
-
-
-          </form>
-
-          <div className="border-t border-brand-clay/15 mt-8 pt-6 flex flex-col items-center gap-3">
-            <button
-              onClick={onAltAction}
-              className="text-xs text-brand-charcoal hover:text-brand-terracotta transition-colors flex items-center gap-1 cursor-pointer font-semibold"
-            >
-              No account? Register as Keeper
-            </button>
-
-            <button
-              onClick={onClose}
-              className="text-[10px] tracking-widest uppercase font-bold text-brand-clay hover:text-brand-charcoal transition-colors cursor-pointer"
-            >
-              ← Back to Exhibitions
+              Forgot Code?
             </button>
           </div>
-        </>
-      )}
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-clay" />
+            <input
+              type={showPassword ? 'text' : 'password'}
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-brand-bg border border-brand-clay/40 rounded-xl pl-10 pr-10 py-3 text-xs sm:text-sm focus:outline-none focus:border-brand-terracotta placeholder-brand-clay"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-brand-clay hover:text-brand-charcoal"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between pt-2">
+          <div className="flex items-center gap-2">
+            <input
+              id="remember-me"
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="rounded border-brand-clay/40 text-brand-terracotta focus:ring-brand-terracotta"
+            />
+            <label htmlFor="remember-me" className="text-xs text-[#555555] cursor-pointer font-sans select-none">
+              Keep signed in
+            </label>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-brand-charcoal text-brand-bg hover:bg-brand-terracotta py-4 rounded-xl text-xs font-bold tracking-widest uppercase transition-colors duration-300 flex items-center justify-center gap-2 mt-2 shadow-md cursor-pointer"
+        >
+          {loading ? 'Authenticating...' : 'Establish Secure Connection'}
+        </button>
+      </form>
+
+      <div className="border-t border-brand-clay/15 mt-8 pt-6 flex flex-col items-center gap-3">
+        <button
+          onClick={onAltAction}
+          className="text-xs text-brand-charcoal hover:text-brand-terracotta transition-colors flex items-center gap-1 cursor-pointer font-semibold"
+        >
+          No account? Register as Keeper
+        </button>
+
+        <button
+          onClick={onClose}
+          className="text-[10px] tracking-widest uppercase font-bold text-brand-clay hover:text-brand-charcoal transition-colors cursor-pointer"
+        >
+          ← Back to Exhibitions
+        </button>
+      </div>
     </div>
   );
 };

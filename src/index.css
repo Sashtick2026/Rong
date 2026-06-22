@@ -6,7 +6,7 @@
   --font-sans: "Inter", "Manrope", system-ui, sans-serif;
   --font-display: "Playfair Display", "Noto Serif Bengali", serif;
   
-  --color-brand-bg: #F7F2EA;
+  --color-brand-bg: #F2EEE5;
   --color-brand-charcoal: #2D2A26;
   --color-brand-terracotta: #C46E4E;
   --color-brand-olive: #6A7450;
@@ -39,7 +39,7 @@
 
 /* Custom Base styles */
 body {
-  background-color: #F7F2EA;
+  background-color: #F2EEE5;
   color: #2D2A26;
   font-family: var(--font-sans);
   overflow-x: hidden;
@@ -70,7 +70,7 @@ html {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F7F2EA;
+  background: #F2EEE5;
 }
 ::-webkit-scrollbar-thumb {
   background: #C46E4E;
@@ -88,7 +88,7 @@ html {
 
 /* Custom ceramic blur shadow, organic styling */
 .ceramic-card {
-  background-color: rgba(247, 242, 234, 0.4);
+  background-color: rgba(242, 238, 229, 0.4);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(184, 161, 137, 0.2);
 }
@@ -106,6 +106,18 @@ html {
 }
 
 /* Circular / Physical Orbit keyframes for Watermarked background Alpanas & slow settings spin */
+@keyframes heart-beat {
+  0% { transform: scale(1); }
+  14% { transform: scale(1.22); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.22); }
+  70% { transform: scale(1); }
+}
+
+.animate-heart-beat {
+  animation: heart-beat 0.6s cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
 @keyframes spin-slow {
   from {
     transform: rotate(0deg);

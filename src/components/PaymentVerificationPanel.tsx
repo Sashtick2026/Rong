@@ -489,7 +489,7 @@ export const PaymentVerificationPanel: React.FC<PaymentVerificationPanelProps> =
               <X className="w-5 h-5" />
             </button>
             <img 
-              src={selectedVer.screenshotUrl} 
+              src={selectedVer?.screenshotUrl || null} 
               alt="Verification document details" 
               className="max-w-full max-h-[80vh] object-contain bg-brand-bg"
             />

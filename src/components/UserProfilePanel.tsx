@@ -150,7 +150,7 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
             <div className="relative group mb-4">
               <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-brand-terracotta p-1 bg-brand-bg">
                 <img 
-                  src={profileImage} 
+                  src={profileImage || null} 
                   alt={name} 
                   className="w-full h-full object-cover rounded-full"
                   referrerPolicy="no-referrer"

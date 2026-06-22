@@ -1,138 +1,269 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Global Safety Net (Strictly Default-Deny)
-    match /{document=**} {
-      allow read, write: if false;
-    }
-
-    // Helper Primitives
     function isSignedIn() {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    function getUserData(userId) {
-      return get(/databases/$(database)/documents/users/$(userId)).data;
-    }
-
-    function getUserRole(userId) {
-      return getUserData(userId).role;
+    function userDoc() {
+      return get(
+        /databases/$(database)/documents/users/$(request.auth.uid)
+      );
     }
 
     function isAdmin() {
-      return isSignedIn() && (getUserRole(request.auth.uid) == 'admin' || getUserRole(request.auth.uid) == 'superAdmin');
+      return isSignedIn() &&
+        exists(
+          /databases/$(database)/documents/users/$(request.auth.uid)
+        ) &&
+        (
+          userDoc().data.role == "admin" ||
+          userDoc().data.role == "superAdmin"
+        );
     }
 
     function isSuperAdmin() {
-      return isSignedIn() && getUserRole(request.auth.uid) == 'superAdmin';
+      return isSignedIn() &&
+        exists(
+          /databases/$(database)/documents/users/$(request.auth.uid)
+        ) &&
+        userDoc().data.role == "superAdmin";
     }
 
-    // String ID Validation helper
-    function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    function isOwner(uid) {
+      return isSignedIn() &&
+             request.auth.uid == uid;
     }
 
-    // Validate incoming data helper for User creation/editing
-    function isValidUser(data) {
-      return data.uid is string &&
-             data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
-             data.email is string && data.email.size() > 0 && data.email.size() <= 200;
-    }
+    // ------------------------
+    // USERS
+    // ------------------------
 
-    // ==========================================
-    // 1. Users Collection Rules
-    // ==========================================
     match /users/{userId} {
-      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
-      
-      // Allow user creation on signup and profile editing
-      allow create: if isSignedIn() && isOwner(userId) && isValidUser(request.resource.data);
-      
-      // Prevent normal users from upgrading their own roles
-      allow update: if isSignedIn() && (
-        isSuperAdmin() ||
-        (isOwner(userId) && isValidUser(request.resource.data) && 
-         request.resource.data.role == resource.data.role)
-      );
-      
-      allow delete: if isSuperAdmin();
+
+      allow read:
+        if isOwner(userId) || isAdmin();
+
+      allow create:
+        if isOwner(userId);
+
+      allow update:
+        if isSuperAdmin() ||
+        (
+          isOwner(userId)
+          &&
+          request.resource.data.role
+          ==
+          resource.data.role
+        );
+
+      allow delete:
+        if isSuperAdmin();
     }
 
-    // ==========================================
-    // 2. Products Collection Rules
-    // ==========================================
+    // ------------------------
+    // PRODUCTS
+    // ------------------------
+
     match /products/{productId} {
-      // Anyone can view products (published status could be filtered client-side, but let's allow read)
+
       allow read: if true;
-      allow write: if isAdmin();
+
+      allow create, update, delete:
+        if isAdmin();
     }
 
-    // ==========================================
-    // 3. Collections Collection Rules
-    // ==========================================
+    // ------------------------
+    // COLLECTIONS
+    // ------------------------
+
     match /collections/{collectionId} {
+
       allow read: if true;
-      allow write: if isAdmin();
+
+      allow create, update, delete:
+        if isAdmin();
     }
 
-    // ==========================================
-    // 4. Site Settings CMS Rules
-    // ==========================================
-    match /siteSettings/{settingId} {
+    // ------------------------
+    // SITE SETTINGS
+    // ------------------------
+
+    match /siteSettings/{docId} {
+
       allow read: if true;
-      allow write: if isAdmin();
+
+      allow create, update, delete:
+        if isAdmin();
     }
 
-    // ==========================================
-    // 5. Orders Collection Rules
-    // ==========================================
+    // ------------------------
+    // ORDERS
+    // ------------------------
+
     match /orders/{orderId} {
-      allow read: if isSignedIn() && (
-        isAdmin() || 
-        resource.data.customerId == request.auth.uid
-      );
-      
-      // Both customers and guests/admins can create orders. 
-      // If customer is signed in, enforce customerId check.
-      allow create: if true; 
-      
-      // Admin can update status, paymentStatus, etc.
-      allow update: if isAdmin();
-      allow delete: if isSuperAdmin();
+
+      allow read:
+        if isAdmin()
+        ||
+        (
+          isSignedIn()
+          &&
+          resource.data.customerId ==
+          request.auth.uid
+        );
+
+      allow create:
+        if isSignedIn()
+        &&
+        request.resource.data.customerId ==
+        request.auth.uid;
+
+      allow update:
+        if isAdmin();
+
+      allow delete:
+        if isAdmin();
     }
 
-    // ==========================================
-    // 6. Payment Verification Rules
-    // ==========================================
+    // ------------------------
+    // PAYMENT VERIFICATION
+    // ------------------------
+
     match /paymentVerification/{verificationId} {
-      // Admins and owners can read
-      allow read: if isAdmin();
-      // Allow customers to submit payment verification credentials
-      allow create: if true;
-      allow update, delete: if isAdmin();
+
+      allow read:
+        if isAdmin()
+        ||
+        (
+          isSignedIn()
+          &&
+          resource.data.customerId ==
+          request.auth.uid
+        );
+
+      allow create:
+        if isSignedIn()
+        &&
+        request.resource.data.customerId ==
+        request.auth.uid;
+
+      allow update, delete:
+        if isAdmin();
     }
 
-    // ==========================================
-    // 7. Notifications Collection Rules
-    // ==========================================
+    // ------------------------
+    // NOTIFICATIONS
+    // ------------------------
+
     match /notifications/{notificationId} {
-      allow read: if isAdmin();
-      allow create: if true; // Any component can create a notification (e.g. checkouts, signups)
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+
+      allow read:
+        if isAdmin();
+
+      allow create, update, delete:
+        if isAdmin();
     }
 
-    // ==========================================
-    // 8. Journal Posts Collection Rules
-    // ==========================================
+    // ------------------------
+    // JOURNAL POSTS
+    // ------------------------
+
     match /journalPosts/{postId} {
-      allow read: if true;
-      allow write: if isAdmin();
+
+      allow read:
+        if true;
+
+      allow create, update, delete:
+        if isAdmin();
+    }
+
+    // ------------------------
+    // REVIEWS
+    // ------------------------
+
+    match /reviews/{reviewId} {
+
+      allow read:
+        if true;
+
+      allow create:
+        if isSignedIn();
+
+      allow update, delete:
+        if isAdmin();
+    }
+
+    // ------------------------
+    // COMMUNITY SNAPS
+    // ------------------------
+
+    match /communitySnaps/{snapId} {
+
+      allow read:
+        if true;
+
+      allow create:
+        if isSignedIn();
+
+      allow update, delete:
+        if isAdmin();
+    }
+
+    // ------------------------
+    // COUPONS
+    // ------------------------
+
+    match /coupons/{couponId} {
+
+      allow read:
+        if true;
+
+      allow create, update, delete:
+        if isAdmin();
+    }
+
+    // ------------------------
+    // MESSAGES
+    // ------------------------
+
+    match /messages/{messageId} {
+
+      allow create:
+        if request.resource.data.name is string
+        &&
+        request.resource.data.email is string
+        &&
+        request.resource.data.message is string;
+
+      allow read, delete:
+        if isAdmin();
+
+      allow update:
+        if false;
+    }
+
+    // ------------------------
+    // MEDIA
+    // ------------------------
+
+    match /media/{mediaId} {
+
+      allow read:
+        if true;
+
+      allow create, update, delete:
+        if isAdmin();
+    }
+
+    // ------------------------
+    // DEFAULT DENY
+    // ------------------------
+
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

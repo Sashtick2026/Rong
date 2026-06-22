@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { 
-  Save, RefreshCw, Eye, BookOpen, AlertCircle, Sparkles, Plus, Trash2, CheckCircle2 
+  Save, RefreshCw, Eye, BookOpen, AlertCircle, Sparkles, Plus, Trash2, CheckCircle2,
+  Mail, Phone, MapPin, Instagram, Facebook, Globe, Youtube, Send
 } from 'lucide-react';
 import { firestore, FooterSettings } from '../lib/mockFirebase';
 import { AlpanaCircular, CornerOrnament } from './Ornaments';
@@ -112,7 +113,7 @@ export const FooterManagementPanel: React.FC = () => {
             <span>Interactive Footer Orchestrator</span>
           </h2>
           <p className="text-xs text-brand-clay mt-1">
-            Re-engineer the final scroll chapter of Rang heritage stories with a rich dynamic, real-time draft workflow.
+            Re-engineer the final scroll chapter of Rongo heritage stories with a rich dynamic, real-time draft workflow.
           </p>
         </div>
 
@@ -398,7 +399,7 @@ export const FooterManagementPanel: React.FC = () => {
 
                 <div className="relative">
                   {draftSettings.logoUrl ? (
-                    <img src={draftSettings.logoUrl} alt="Logo" className="w-12 h-12 rounded-full border border-brand-clay/10 p-0.5 mix-blend-lighten mb-1.5 mx-auto" referrerPolicy="no-referrer" />
+                    <img src={draftSettings.logoUrl} alt="Logo" className="w-12 h-12 rounded-full border border-brand-clay/10 p-0.5 mix-blend-lighten mb-1.5 mx-auto object-cover" referrerPolicy="no-referrer" />
                   ) : (
                     <div className="w-10 h-10 rounded-full border border-brand-terracotta bg-brand-charcoal/40 flex items-center justify-center mx-auto mb-1.5">
                       <span className="font-serif font-bold text-lg text-brand-terracotta">র</span>
@@ -413,55 +414,125 @@ export const FooterManagementPanel: React.FC = () => {
                   </span>
                 </div>
 
-                <p className="font-serif text-[#ECE7E1]/80 max-w-sm px-4 mt-4 italic font-light text-[11px]">
+                <p className="font-serif text-[#ECE7E1]/80 max-w-sm px-4 mt-4 italic font-light text-[11px] leading-relaxed">
                   "{draftSettings.footerMessage}"
                 </p>
               </div>
 
-              {/* Newsletter Subscribed Area */}
-              <div className="mt-4 p-4 border border-brand-clay/15 rounded-xl bg-black/15 space-y-2">
-                <span className="font-bold font-serif text-[#FFFFFF] text-[10px] uppercase tracking-wider block">
-                  ✦ {draftSettings.newsletterTitle}
-                </span>
-                <p className="text-[10px] text-gray-400">{draftSettings.newsletterDescription}</p>
-                <div className="flex">
-                  <input 
-                    type="text" 
-                    placeholder="Enter email coordinate..." 
-                    disabled 
-                    className="w-full bg-[#24211F] border border-brand-clay/20 p-1.5 rounded-l text-[10px]"
-                  />
-                  <button type="button" disabled className="bg-brand-charcoal px-3 text-brand-terracotta border-brand-clay/20 border rounded-r">
-                    Send
-                  </button>
+              {/* Bottom sections wrapper to mimic the live footer */}
+              <div className="mt-8 space-y-6 border-t border-brand-clay/10 pt-6">
+                
+                {/* 1. Newsletter Block */}
+                <div className="space-y-2">
+                  <span className="font-bold font-serif text-[#FFFFFF] text-[10px] uppercase tracking-wider block flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3 text-brand-terracotta animate-pulse" />
+                    <span>{draftSettings.newsletterTitle}</span>
+                  </span>
+                  <p className="text-[10px] text-gray-400">{draftSettings.newsletterDescription}</p>
+                  <div className="flex">
+                    <input 
+                      type="text" 
+                      placeholder="Enter email coordinate..." 
+                      disabled 
+                      className="w-full bg-[#24211F] border border-brand-clay/20 p-1.5 rounded-l text-[9px] focus:outline-none"
+                    />
+                    <button type="button" disabled className="bg-brand-charcoal px-2.5 text-brand-terracotta border-brand-clay/20 border border-l-0 rounded-r text-[9px]">
+                      <Send className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              {/* Grid content */}
-              <div className="grid grid-cols-2 gap-4 mt-6 border-t border-brand-clay/10 pt-4 text-[10px]">
-                <div>
-                  <h4 className="font-bold text-white uppercase text-[9px] mb-1">Index directories</h4>
-                  <ul className="space-y-1">
+                {/* 2. Portfolio navigation index */}
+                <div className="space-y-2 border-t border-brand-clay/10 pt-4">
+                  <span className="font-serif text-white text-[10px] font-semibold tracking-wider uppercase block">
+                    Portfolio Navigation
+                  </span>
+                  <ul className="space-y-1.5">
                     {draftSettings.navigationLinks && draftSettings.navigationLinks.map((link, i) => (
-                      <li key={i} className="text-gray-400 hover:text-white uppercase tracking-wider text-[8px] font-semibold">
-                        • {link.label}
+                      <li key={i} className="text-gray-400 uppercase tracking-widest text-[8px] font-bold flex items-center gap-1">
+                        <span className="w-1 h-[1px] bg-brand-terracotta opacity-65" />
+                        <span>{link.label}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
-                <div>
-                  <h4 className="font-bold text-white uppercase text-[9px] mb-1">Enquiry box</h4>
-                  <div className="space-y-1 text-gray-400">
-                    <p>{draftSettings.address}</p>
-                    <p>{draftSettings.phone}</p>
-                    <p className="truncate text-[8px] font-semibold">{draftSettings.email}</p>
+
+                {/* 3. Featured mediums mock */}
+                <div className="space-y-2 border-t border-brand-clay/10 pt-4">
+                  <span className="font-serif text-white text-[10px] font-semibold tracking-wider uppercase block">
+                    Featured Mediums
+                  </span>
+                  <ul className="space-y-1">
+                    <li className="text-[9px] text-[#C8C2BB] uppercase tracking-widest flex items-center gap-1">
+                      <span className="w-1 h-1 rounded-full bg-brand-clay opacity-60" />
+                      <span>Sarees & Looms</span>
+                    </li>
+                    <li className="text-[9px] text-[#C8C2BB] uppercase tracking-widest flex items-center gap-1">
+                      <span className="w-1 h-1 rounded-full bg-brand-clay opacity-60" />
+                      <span>Terracotta & Clay Jewellery</span>
+                    </li>
+                    <li className="text-[9px] text-[#C8C2BB] uppercase tracking-widest flex items-center gap-1">
+                      <span className="w-1 h-1 rounded-full bg-brand-clay opacity-60" />
+                      <span>Pure Brass & Metal Work</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* 4. Atelier Enquiries */}
+                <div className="space-y-2 border-t border-brand-clay/10 pt-4">
+                  <span className="font-serif text-white text-[10px] font-semibold tracking-wider uppercase block">
+                    Atelier Enquiries
+                  </span>
+                  <ul className="space-y-2 font-mono text-[9px] text-gray-400">
+                    <li className="flex items-start gap-1.5 flex-wrap">
+                      <MapPin className="w-3 h-3 text-brand-terracotta shrink-0 mt-0.5" />
+                      <span>{draftSettings.address}</span>
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <Phone className="w-3 h-3 text-brand-olive shrink-0" />
+                      <span>{draftSettings.phone}</span>
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <Mail className="w-3 h-3 text-brand-olive shrink-0" />
+                      <span className="truncate">{draftSettings.email}</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* 5. Brand Identity Social Matrix */}
+                <div className="space-y-2 border-t border-brand-clay/10 pt-4 flex flex-col gap-2">
+                  <span className="text-[8px] font-mono uppercase tracking-[0.2em] text-brand-clay font-bold block">
+                    Live Heritage Matrix Feed
+                  </span>
+                  <div className="flex gap-2.5">
+                    {draftSettings.socialLinks?.instagram && (
+                      <div className="w-6 h-6 rounded-full bg-[#24211F] text-brand-clay flex items-center justify-center">
+                        <Instagram className="w-3.5 h-3.5" />
+                      </div>
+                    )}
+                    {draftSettings.socialLinks?.facebook && (
+                      <div className="w-6 h-6 rounded-full bg-[#24211F] text-brand-clay flex items-center justify-center">
+                        <Facebook className="w-3.5 h-3.5" />
+                      </div>
+                    )}
+                    {draftSettings.socialLinks?.whatsapp && (
+                      <div className="w-6 h-6 rounded-full bg-[#24211F] text-brand-clay flex items-center justify-center">
+                        <Globe className="w-3.5 h-3.5" />
+                      </div>
+                    )}
+                    {draftSettings.socialLinks?.youtube && (
+                      <div className="w-6 h-6 rounded-full bg-[#24211F] text-brand-clay flex items-center justify-center">
+                        <Youtube className="w-3.5 h-3.5" />
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
 
-              {/* Copyright bottom */}
-              <div className="mt-8 pt-4 border-t border-brand-clay/10 text-center text-[9px] text-[#8C857B]">
-                <p>{draftSettings.copyrightText}</p>
+                {/* 6. Closing Legal Copyright */}
+                <div className="border-t border-brand-clay/10 pt-4 text-center text-[8px] text-[#8C857B] space-y-1 font-mono">
+                  <p>{draftSettings.copyrightText}</p>
+                </div>
+
               </div>
 
             </div>

@@ -6,8 +6,9 @@ import {
   Lock, ShieldCheck, RefreshCw, X, Eye, HelpCircle, ArrowRight, Package,
   FolderOpen, Calendar, HelpCircle as AlertIcon, AlertTriangle, ChevronRight, Sparkles, Grid
 } from 'lucide-react';
-import { firestore, UserProfile, AdminOrder, MediaItem, SiteSettings, ContactMessage, UserRole } from '../lib/mockFirebase';
-import { Product, Collection, JournalArticle, AboutSettings } from '../types';
+import { firestore, UserProfile, AdminOrder, MediaItem, SiteSettings, ContactMessage, UserRole, db } from '../lib/mockFirebase';
+import { onSnapshot, collection } from 'firebase/firestore';
+import { Product, Collection, JournalArticle, AboutSettings, Testimonial, CommunitySnap } from '../types';
 import { CornerOrnament } from './Ornaments';
 import { FooterManagementPanel } from './FooterManagementPanel';
 import { CouponManagementPanel } from './CouponManagementPanel';
@@ -39,12 +40,19 @@ type AdminTab =
   | 'home-editor'
   | 'about-editor'
   | 'payment-verification'
-  | 'payment-settings';
+  | 'payment-settings'
+  | 'reviews-editor'
+  | 'snapshots-editor';
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onLogout, onReturnToSite }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  // Handoff Clean Slate States
+  const [confirmWipeCount, setConfirmWipeCount] = useState<number>(0);
+  const [isWiping, setIsWiping] = useState<boolean>(false);
+  const [isReSeeding, setIsReSeeding] = useState<boolean>(false);
 
   // Database states
   const [products, setProducts] = useState<Product[]>([]);
@@ -58,6 +66,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onL
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
   const [paymentSettingsState, setPaymentSettingsState] = useState<any>(null);
+  const [adminReviews, setAdminReviews] = useState<Testimonial[]>([]);
+  const [adminSnaps, setAdminSnaps] = useState<CommunitySnap[]>([]);
 
   // Load database values
   const reloadData = () => {
@@ -70,6 +80,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onL
     setSettings(firestore.getSettings());
     setAboutSettings(firestore.getAboutSettings());
     setMessages(firestore.getMessages());
+    if (firestore.getReviews) {
+      setAdminReviews(firestore.getReviews());
+    }
+    if (firestore.getCommunitySnaps) {
+      setAdminSnaps(firestore.getCommunitySnaps());
+    }
     try {
       setPayments(firestore.getPaymentVerifications());
       setPaymentSettingsState(firestore.getPaymentSettings());
@@ -80,6 +96,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onL
 
   useEffect(() => {
     reloadData();
+
+    // Subscribe to collections to trigger real-time UI updates
+    const unsubOrders = onSnapshot(collection(db, 'orders'), () => {
+      reloadData();
+    }, (err) => console.warn('Real-Time Orders sync deferred:', err));
+
+    const unsubPayments = onSnapshot(collection(db, 'paymentVerification'), () => {
+      reloadData();
+    }, (err) => console.warn('Real-Time Payments sync deferred:', err));
+
+    const unsubNotifications = onSnapshot(collection(db, 'notifications'), () => {
+      reloadData();
+    }, (err) => console.warn('Real-Time Notifications sync deferred:', err));
+
+    const unsubReviews = onSnapshot(collection(db, 'reviews'), () => {
+      reloadData();
+    }, (err) => console.warn('Real-Time Reviews sync deferred:', err));
+
+    const unsubSnaps = onSnapshot(collection(db, 'communitySnaps'), () => {
+      reloadData();
+    }, (err) => console.warn('Real-Time Snaps sync deferred:', err));
+
+    return () => {
+      unsubOrders();
+      unsubPayments();
+      unsubNotifications();
+      unsubReviews();
+      unsubSnaps();
+    };
   }, []);
 
   const triggerToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -118,6 +163,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onL
     { id: 'collections', label: 'Collections', icon: FolderOpen, roles: ['admin', 'superAdmin'] },
     { id: 'orders', label: 'Orders Logs', icon: ShoppingBag, roles: ['admin', 'superAdmin'] },
     { id: 'customers', label: 'Customers', icon: Users, roles: ['admin', 'superAdmin'] },
+    { id: 'reviews-editor', label: 'Keeper Reviews', icon: MessageSquare, roles: ['admin', 'superAdmin'] },
+    { id: 'snapshots-editor', label: 'Community Snaps', icon: Image, roles: ['admin', 'superAdmin'] },
     { id: 'payment-verification', label: 'Payment Queue', icon: ShieldCheck, roles: ['admin', 'superAdmin'] },
     { id: 'payment-settings', label: 'bKash Settings', icon: Settings, roles: ['admin', 'superAdmin'] },
     { id: 'footer-settings', label: 'Farewell Footer', icon: Settings, roles: ['admin', 'superAdmin'] },
@@ -439,6 +486,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onL
                             <span className={`text-[9px] font-semibold uppercase px-2 py-0.5 rounded select-none ${
                               item.status === 'delivered' ? 'bg-brand-olive/15 text-brand-olive' :
                               item.status === 'processing' ? 'bg-[#D2B591] text-brand-charcoal' :
+                              item.status === 'verification_pending' ? 'bg-[#D2B591]/25 text-brand-charcoal font-bold' :
+                              item.status === 'payment_verified' ? 'bg-[#5B6349]/15 text-[#4B5634] font-bold' :
+                              item.status === 'payment_rejected' ? 'bg-brand-terracotta/15 text-brand-terracotta' :
+                              item.status === 'pending' ? 'bg-brand-clay/15 text-brand-clay' :
                               'bg-brand-terracotta/15 text-brand-terracotta'
                             }`}>
                               {item.status}
@@ -484,6 +535,96 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onL
                         ⚙ Brand Settings
                       </button>
                     </div>
+                  </div>
+                </div>
+
+                {/* SYSTEM WIPE & HANDOFF RESET HUB (CRITICAL FOR CLIENT DELIVERY) */}
+                <div className="bg-brand-bg border border-brand-terracotta/25 p-6 sm:p-8 rounded-3xl shadow-xs relative overflow-hidden mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-brand-terracotta/5 rounded-full blur-xl pointer-events-none" />
+                  
+                  <div className="lg:col-span-8 space-y-3">
+                    <div className="flex items-center gap-2.5 text-brand-terracotta">
+                      <AlertTriangle className="w-5 h-5 animate-pulse" />
+                      <h4 className="font-serif text-lg font-semibold tracking-tight">✦ Brand Delivery Clean-Slate & Reset Hub</h4>
+                    </div>
+                    <p className="text-xs text-brand-charcoal/80 leading-relaxed max-w-2xl">
+                      Wipe all test transaction trails and demo records before handing this masterwork over to your client. This console purges the current products catalog, order history receipts, manual transaction verifications, raw customer inquiry logs, and active alert notifications, resetting your live revenue charts isomorphically back to absolute 0 BDT.
+                    </p>
+                    <div className="flex flex-wrap items-center gap-4 text-[9px] font-mono font-bold text-brand-clay uppercase tracking-wider">
+                      <span>Products: {products.length} listed</span>
+                      <span>•</span>
+                      <span>Orders: {orders.length} logged</span>
+                      <span>•</span>
+                      <span>Verifications: {payments.length} queued</span>
+                    </div>
+                  </div>
+
+                  <div className="lg:col-span-4 flex flex-col gap-3 justify-center relative z-10">
+                    {confirmWipeCount === 0 ? (
+                      <button
+                        onClick={() => {
+                          setConfirmWipeCount(1);
+                          triggerToast('Atelier database release safety unlocked. Please press again to execute final clean sweep.', 'info');
+                        }}
+                        disabled={isWiping}
+                        className="w-full bg-[#1A1A1A] hover:bg-brand-terracotta text-brand-bg hover:shadow-lg transition-all duration-300 py-3 px-4 rounded-xl text-center text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+                      >
+                        <Trash2 className="w-4 h-4 text-brand-bg" />
+                        <span>Wipe All Sample Data</span>
+                      </button>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <button
+                          onClick={async () => {
+                            setIsWiping(true);
+                            try {
+                              await firestore.wipeAtelierData();
+                              setConfirmWipeCount(0);
+                              reloadData();
+                              triggerToast('Heritage Atelier purged of all test products, orders, and verifications successfully.', 'success');
+                            } catch (e) {
+                              setConfirmWipeCount(0);
+                              triggerToast('A connection error occurred during purge. Please verify network state.', 'error');
+                            } finally {
+                              setIsWiping(false);
+                            }
+                          }}
+                          disabled={isWiping}
+                          className="w-full bg-brand-terracotta hover:bg-red-700 text-brand-bg transition-colors py-3.5 px-4 rounded-xl text-center text-xs font-bold uppercase tracking-widest animate-pulse flex items-center justify-center gap-2 shadow-md shadow-brand-terracotta/10"
+                        >
+                          <Check className="w-4 h-4 text-brand-bg animate-bounce" />
+                          <span>Yes, Flush & Clean Shop!</span>
+                        </button>
+                        <button
+                          onClick={() => setConfirmWipeCount(0)}
+                          className="w-full text-center text-[9px] text-brand-clay uppercase font-bold tracking-widest hover:underline hover:text-brand-charcoal pt-1 block"
+                        >
+                          [Cancel Sweep]
+                        </button>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={async () => {
+                        setIsReSeeding(true);
+                        try {
+                          await firestore.seedDemoProductsAndOrders();
+                          triggerToast('Database re-seed request transmitted. Preparing traditional stock demo data...', 'success');
+                          setTimeout(() => {
+                            window.location.reload();
+                          }, 1500);
+                        } catch (e) {
+                          triggerToast('Seed dispatcher encountered a network error. Reconnecting...', 'error');
+                        } finally {
+                          setIsReSeeding(false);
+                        }
+                      }}
+                      disabled={isReSeeding || isWiping}
+                      className="w-full border border-brand-clay/35 hover:bg-brand-beige/25 hover:border-brand-charcoal text-brand-charcoal transition-colors py-2.5 px-4 rounded-xl text-center text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isReSeeding ? 'animate-spin' : ''}`} />
+                      <span>Restore Heritage Seeds</span>
+                    </button>
                   </div>
                 </div>
 
@@ -570,6 +711,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onL
             {activeTab === 'home-editor' && settings && (
               <HomeEditorPanel 
                 initialSettings={settings}
+                products={products}
                 onSave={(setts) => { firestore.saveSettings(setts); reloadData(); triggerToast('Home page visual layout text stored.'); }}
               />
             )}
@@ -622,6 +764,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onL
             {activeTab === 'payment-settings' && (
               <PaymentSettingsPanel
                 settings={paymentSettingsState}
+                onReload={reloadData}
+                triggerToast={triggerToast}
+              />
+            )}
+
+            {/* VIEW 14: KEEPER REVIEWS MANAGER */}
+            {activeTab === 'reviews-editor' && (
+              <ReviewsManagementPanel
+                reviews={adminReviews}
+                onReload={reloadData}
+                triggerToast={triggerToast}
+              />
+            )}
+
+            {/* VIEW 15: COMMUNITY SNAPSHOTS MANAGER */}
+            {activeTab === 'snapshots-editor' && (
+              <SnapshotsManagementPanel
+                snapshots={adminSnaps}
                 onReload={reloadData}
                 triggerToast={triggerToast}
               />
@@ -792,7 +952,7 @@ const ProductsCrudPanel: React.FC<ProductsCrudProps> = ({ products, collections,
               {filtered.map((p) => (
                 <tr key={p.id} className="hover:bg-brand-beige/10 transition-colors">
                   <td className="py-4 px-6 flex items-center gap-3">
-                    <img src={p.image} referrerPolicy="no-referrer" className="w-10 h-12 object-cover rounded border border-brand-clay/15 bg-brand-beige" />
+                    <img src={p.image || null} referrerPolicy="no-referrer" className="w-10 h-12 object-cover rounded border border-brand-clay/15 bg-brand-beige" />
                     <div>
                       <span className="font-bold block text-sm">{p.name}</span>
                       <span className="text-[10.5px] text-brand-clay font-serif italic mt-0.5 block">{p.banglaName}</span>
@@ -1058,7 +1218,7 @@ const CollectionsCrudPanel: React.FC<CollectionsCrudProps> = ({ collections, onS
           <div key={c.id} className="bg-brand-bg border border-brand-clay/20 rounded-2xl overflow-hidden flex flex-col justify-between shadow-xs">
             <div>
               <div className="relative aspect-[16/10] bg-brand-beige/40 border-b border-brand-clay/15">
-                <img src={c.image} alt={c.name} className="w-full h-full object-cover" />
+                <img src={c.image || null} alt={c.name} className="w-full h-full object-cover" />
                 <span className="absolute bottom-2 left-2 text-[8px] font-semibold tracking-wider bg-brand-charcoal px-2.5 py-1 text-brand-bg rounded">
                   {c.curator} CURATION
                 </span>
@@ -1251,10 +1411,16 @@ const OrdersPanel: React.FC<OrdersPanelProps> = ({ orders, onUpdateStatus }) => 
                         o.status === 'delivered' ? 'bg-brand-olive/10 border-brand-olive text-brand-olive' :
                         o.status === 'cancelled' ? 'bg-brand-terracotta/10 border-brand-terracotta text-brand-terracotta' :
                         o.status === 'pending' ? 'bg-brand-clay/10 border-brand-clay text-brand-clay' :
+                        o.status === 'verification_pending' ? 'bg-[#D2B591]/20 border-[#D2B591] text-brand-charcoal' :
+                        o.status === 'payment_verified' ? 'bg-[#5B6349]/15 border-[#5B6349] text-[#4B5634]' :
+                        o.status === 'payment_rejected' ? 'bg-brand-terracotta/15 border-brand-terracotta/40 text-brand-terracotta' :
                         'bg-brand-beige border-brand-clay text-brand-charcoal'
                       }`}
                     >
                       <option value="pending">Pending</option>
+                      <option value="verification_pending">Verification Pending</option>
+                      <option value="payment_verified">Payment Verified</option>
+                      <option value="payment_rejected">Payment Rejected</option>
                       <option value="processing">Processing</option>
                       <option value="shipped">Shipped</option>
                       <option value="delivered">Delivered</option>
@@ -1322,7 +1488,7 @@ const OrdersPanel: React.FC<OrdersPanelProps> = ({ orders, onUpdateStatus }) => 
                       {selectedOrder.products.map((item, idx) => (
                         <div key={idx} className="py-2.5 flex items-center justify-between gap-3 font-sans">
                           <div className="flex items-center gap-2.5">
-                            <img src={item.product?.image} className="w-8 h-10 object-cover rounded bg-brand-beige/50 border border-brand-clay/15" />
+                            <img src={item.product?.image || null} className="w-8 h-10 object-cover rounded bg-brand-beige/50 border border-brand-clay/15" />
                             <div>
                               <span className="font-semibold block line-clamp-1">{item.product?.name}</span>
                               <span className="text-[10px] text-brand-clay block italic">{item.product?.banglaName} × {item.quantity} units</span>
@@ -1778,7 +1944,7 @@ const MediaLibraryPanel: React.FC<MediaProps> = ({ mediaItems, onUpload, onDelet
             {filtered.map(m => (
               <div key={m.id} className="bg-brand-bg border border-brand-clay/15 rounded-xl overflow-hidden shadow-xs flex flex-col justify-between group relative">
                 <div className="aspect-square relative bg-brand-beige/35 border-b border-brand-clay/15">
-                  <img src={m.url} alt={m.name} className="w-full h-full object-cover" />
+                  <img src={m.url || null} alt={m.name} className="w-full h-full object-cover" />
                   <button
                     onClick={() => onDelete(m.id)}
                     className="absolute top-2 right-2 p-1.5 rounded-full bg-brand-charcoal/80 text-brand-bg hover:bg-brand-terracotta transition-colors shadow-md opacity-0 group-hover:opacity-100"
@@ -1887,69 +2053,257 @@ interface AnalyticsProps {
 }
 
 const AnalyticsDetailedView: React.FC<AnalyticsProps> = ({ products, orders }) => {
+  // Filter active and non-cancelled orders for accurate accounting
+  const validOrders = (orders || []).filter(
+    (o) => o && o.status !== 'cancelled' && o.status !== 'payment_rejected'
+  );
+
+  // Core metrics
+  const totalRevenue = validOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  const totalOrdersCount = validOrders.length;
+  const totalItemsSold = validOrders.reduce((sum, o) => {
+    return sum + (o.products || []).reduce((pSum, pItem) => pSum + (pItem.quantity || 1), 0);
+  }, 0);
+  const averageBasketValue = totalOrdersCount > 0 ? Math.round(totalRevenue / totalOrdersCount) : 0;
+
+  // Group stats by Category
+  const categoryStats: Record<string, { count: number; revenue: number }> = {};
+  
+  // Track overall categories to show empty categories if needed
+  const uniqueCategories: string[] = Array.from(new Set<string>((products || []).map(p => (p.category || 'sarees') as string)));
+  uniqueCategories.forEach(cat => {
+    categoryStats[cat] = { count: 0, revenue: 0 };
+  });
+
+  validOrders.forEach((o) => {
+    (o.products || []).forEach((pItem) => {
+      if (!pItem.product) return;
+      const cat = pItem.product.category || 'sarees';
+      const qty = pItem.quantity || 1;
+      const rev = qty * (pItem.product.price || 0);
+
+      if (!categoryStats[cat]) {
+        categoryStats[cat] = { count: 0, revenue: 0 };
+      }
+      categoryStats[cat].count += qty;
+      categoryStats[cat].revenue += rev;
+    });
+  });
+
+  const categoryLabels: Record<string, string> = {
+    sarees: 'Sarees',
+    jewelry: 'Jewels',
+    decor: 'Decor',
+    bangles: 'Bangles',
+    shawls: 'Shawls & Wraps',
+    home: 'Home Decor'
+  };
+
+  const getCategoryThemeColor = (cat: string) => {
+    const key = cat.toLowerCase();
+    if (key === 'sarees') return { fill: '#4B5634', bg: 'bg-brand-olive/20', text: 'text-brand-olive' };
+    if (key === 'jewelry' || key === 'jewels') return { fill: '#C46E4E', bg: 'bg-brand-terracotta/20', text: 'text-brand-terracotta' };
+    if (key === 'decor' || key === 'home') return { fill: '#8E857B', bg: 'bg-brand-clay/20', text: 'text-brand-clay' };
+    return { fill: '#2D2A26', bg: 'bg-brand-charcoal/20', text: 'text-brand-charcoal' };
+  };
+
+  const categoryReport = Object.entries(categoryStats).map(([category, data]) => {
+    const share = totalRevenue > 0 ? (data.revenue / totalRevenue) * 100 : 0;
+    return {
+      category,
+      label: categoryLabels[category.toLowerCase()] || category.charAt(0).toUpperCase() + category.slice(1),
+      count: data.count,
+      revenue: data.revenue,
+      share
+    };
+  }).filter(item => item.count > 0 || item.revenue > 0 || uniqueCategories.includes(item.category))
+    .sort((a, b) => b.revenue - a.revenue);
+
+  // Group stats by Product for Best Sellers Leaderboard
+  const productStats: Record<string, { product: Product; quantity: number; revenue: number }> = {};
+  validOrders.forEach((o) => {
+    (o.products || []).forEach((pItem) => {
+      if (!pItem.product) return;
+      const p = pItem.product;
+      const qty = pItem.quantity || 1;
+      const rev = qty * (p.price || 0);
+
+      if (!productStats[p.id]) {
+        productStats[p.id] = { product: p, quantity: 0, revenue: 0 };
+      }
+      productStats[p.id].quantity += qty;
+      productStats[p.id].revenue += rev;
+    });
+  });
+
+  const topProducts = Object.values(productStats)
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 4);
+
+  // Get dynamic insights based on true statistics
+  const leadCategory = categoryReport[0];
+  const topProductObj = topProducts[0];
+  const pendingOrdersCount = (orders || []).filter(o => o.status === 'pending' || o.status === 'verification_pending').length;
+
   return (
-    <div className="space-y-8" id="analytics-panel">
-      <div>
-        <h3 className="font-serif text-2xl font-semibold">Atelier Analytics Engine</h3>
-        <p className="text-xs text-brand-clay uppercase tracking-widest mt-0.5">Examine seasonal design conversions and order metrics</p>
+    <div className="space-y-8 animate-fade-in" id="analytics-panel">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-brand-bg p-6 rounded-2xl border border-brand-clay/15 shadow-xs">
+        <div>
+          <h3 className="font-serif text-2xl font-bold text-brand-charcoal">Atelier Live Analytics</h3>
+          <p className="text-xs text-brand-clay mt-1">Examine real-time heritage design metrics, order transactions, and collection distribution.</p>
+        </div>
+        <div className="flex items-center gap-2 bg-[#F3EFE9] border border-brand-clay/10 px-4 py-2 rounded-xl">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[10px] font-mono font-medium text-brand-charcoal uppercase tracking-widest">Live Sync Enabled</span>
+        </div>
       </div>
 
-      {/* THREE CARDS ROW */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-brand-bg border border-brand-clay/20 p-5 rounded-2xl">
-          <span className="text-[10px] uppercase font-bold text-brand-clay tracking-wider">Conversion rate index</span>
-          <span className="font-serif text-2xl sm:text-3xl font-bold block mt-1">3.85%</span>
-          <p className="text-[10px] text-brand-olive mt-1">✔ Industry leading for heritage boutiques (+0.4% from May)</p>
+      {/* CORE FINANCIAL INDICATORS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-brand-bg border border-brand-clay/15 p-6 rounded-2xl shadow-xs hover:border-brand-clay/30 transition-all">
+          <span className="text-[10px] uppercase font-bold text-brand-clay tracking-wider block">Gross Realized Revenue</span>
+          <span className="font-serif text-2xl sm:text-3xl font-bold text-brand-charcoal block mt-1">৳{totalRevenue.toLocaleString()}</span>
+          <p className="text-[10px] text-brand-olive mt-1.5 flex items-center gap-1 font-medium">
+            ✔ Representing checkouts from {totalOrdersCount} orders
+          </p>
         </div>
-        <div className="bg-brand-bg border border-brand-clay/20 p-5 rounded-2xl">
-          <span className="text-[10px] uppercase font-bold text-brand-clay tracking-wider">Average Basket coordinate</span>
-          <span className="font-serif text-2xl sm:text-3xl font-bold block mt-1">৳330</span>
-          <p className="text-[10px] text-brand-clay mt-1">Saree checkouts drive high basket densities.</p>
+        <div className="bg-brand-bg border border-brand-clay/15 p-6 rounded-2xl shadow-xs hover:border-brand-clay/30 transition-all">
+          <span className="text-[10px] uppercase font-bold text-brand-clay tracking-wider block">Average Spend Basket</span>
+          <span className="font-serif text-2xl sm:text-3xl font-bold text-brand-charcoal block mt-1">৳{averageBasketValue.toLocaleString()}</span>
+          <p className="text-[10px] text-brand-clay mt-1.5 font-medium">
+            Average transaction basket density value
+          </p>
         </div>
-        <div className="bg-brand-bg border border-brand-clay/20 p-5 rounded-2xl">
-          <span className="text-[10px] uppercase font-bold text-brand-clay tracking-wider">Visitor coordinates (June 2026)</span>
-          <span className="font-serif text-2xl sm:text-3xl font-bold block mt-1">1,940 Keepers</span>
-          <p className="text-[10px] text-[#5B6349] mt-1">94% Organic navigation traffic reported.</p>
+        <div className="bg-brand-bg border border-brand-clay/15 p-6 rounded-2xl shadow-xs hover:border-brand-clay/30 transition-all">
+          <span className="text-[10px] uppercase font-bold text-brand-clay tracking-wider block">Exquisite Items Sold</span>
+          <span className="font-serif text-2xl sm:text-3xl font-bold text-brand-charcoal block mt-1">{totalItemsSold} Items</span>
+          <p className="text-[10px] text-brand-olive mt-1.5 font-medium">
+            Crafted and dispatched items log
+          </p>
+        </div>
+        <div className="bg-brand-bg border border-brand-clay/15 p-6 rounded-2xl shadow-xs hover:border-brand-clay/30 transition-all">
+          <span className="text-[10px] uppercase font-bold text-brand-clay tracking-wider block">Awaiting Verification</span>
+          <span className="font-serif text-2xl sm:text-3xl font-bold text-brand-terracotta block mt-1">{pendingOrdersCount} Queue</span>
+          <p className="text-[10px] text-brand-clay mt-1.5 font-medium">
+            Pending payment & checkout review logs
+          </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Sales by category */}
-        <div className="lg:col-span-6 bg-brand-bg border border-brand-clay/20 p-6 sm:p-8 rounded-3xl">
-          <h4 className="font-serif text-base font-bold mb-4">Volume Distribution by Category</h4>
-          <svg className="w-full h-48" viewBox="0 0 200 100">
-            {/* Real responsive donut graph or bar visualizer */}
-            <rect x="10" y="20" width="35" height="60" fill="#4B5634" rx="3" />
-            <rect x="55" y="40" width="35" height="40" fill="#C46E4E" rx="3" />
-            <rect x="100" y="55" width="35" height="25" fill="#8E857B" rx="3" />
-            <rect x="145" y="70" width="35" height="10" fill="#2D2A26" rx="3" />
-            
-            <text x="15" y="92" fontSize="6.5" fill="#555" fontWeight="semibold">Sarees</text>
-            <text x="60" y="92" fontSize="6.5" fill="#555" fontWeight="semibold">Jewels</text>
-            <text x="105" y="92" fontSize="6.5" fill="#555" fontWeight="semibold">Decor</text>
-            <text x="150" y="92" fontSize="6.5" fill="#555" fontWeight="semibold">Bangles</text>
+        {/* Dynamic Category Volume Distribution */}
+        <div className="lg:col-span-7 bg-brand-bg border border-brand-clay/15 p-6 sm:p-8 rounded-3xl shadow-xs space-y-6">
+          <div>
+            <h4 className="font-serif text-lg font-bold text-brand-charcoal">Volume & Revenue by Category</h4>
+            <p className="text-xs text-brand-clay mt-0.5">Category contributions parsed dynamically from actual database orders</p>
+          </div>
 
-            <text x="21" y="16" fontSize="7" fill="#4B5634" fontWeight="bold">60%</text>
-            <text x="66" y="36" fontSize="7" fill="#C46E4E" fontWeight="bold">25%</text>
-            <text x="111" y="51" fontSize="7" fill="#8E857B" fontWeight="bold">10%</text>
-            <text x="158" y="66" fontSize="7" fill="#2D2A26" fontWeight="bold">5%</text>
-          </svg>
+          <div className="space-y-5">
+            {categoryReport.map((rep) => {
+              const theme = getCategoryThemeColor(rep.category);
+              return (
+                <div key={rep.category} className="space-y-2">
+                  <div className="flex justify-between text-xs sm:text-sm font-sans font-medium">
+                    <span className="text-brand-charcoal font-bold flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: theme.fill }} />
+                      {rep.label}
+                    </span>
+                    <span className="text-brand-clay font-mono">
+                      ৳{rep.revenue.toLocaleString()} <span className="opacity-60">({rep.count} sold)</span>
+                    </span>
+                  </div>
+                  {/* Custom Progress Bar */}
+                  <div className="w-full bg-[#ECE7DE] h-2.5 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full rounded-full transition-all duration-1000" 
+                      style={{ 
+                        width: `${Math.max(rep.share, totalRevenue > 0 && rep.revenue > 0 ? 1 : 0)}%`,
+                        backgroundColor: theme.fill 
+                      }} 
+                    />
+                  </div>
+                  <div className="text-[10px] text-brand-clay text-right font-mono">
+                    {rep.share.toFixed(1)}% revenue share
+                  </div>
+                </div>
+              );
+            })}
+
+            {categoryReport.length === 0 && (
+              <div className="py-8 text-center text-xs text-brand-clay font-sans">
+                No categorical sales logged in the database yet.
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Analytics Insights block */}
-        <div className="lg:col-span-6 bg-brand-bg border border-brand-clay/20 p-6 sm:p-8 rounded-3xl flex flex-col justify-between">
-          <div>
-            <span className="text-[10px] tracking-widest uppercase text-brand-olive font-bold">Atelier Observations</span>
-            <h4 className="font-serif text-lg font-bold text-brand-charcoal mt-1 mb-3">June design trends summary</h4>
-            <ul className="space-y-3 text-xs text-brand-charcoal/80 leading-relaxed list-disc pl-4 font-sans">
-              <li><strong>The Nilufer Silk Saree</strong> is our highest grossing asset log, accounting for 60% of absolute realized revenue.</li>
-              <li>Sourcing coordinates indicate a 40% surge in inquiries regarding <strong>Matir Trishna clay pottery pieces</strong>.</li>
-              <li>Organic conversions peaks at 21:00 UTC (BD standard night hours) coinciding with Digital Catalog dispatch.</li>
+        {/* Dynamic Observations & Best Sellers Leaderboard */}
+        <div className="lg:col-span-5 flex flex-col gap-6">
+          {/* Atelier Dynamic Observations */}
+          <div className="bg-brand-bg border border-brand-clay/15 p-6 sm:p-8 rounded-3xl shadow-xs">
+            <span className="text-[10px] tracking-widest uppercase text-brand-olive font-bold">Atelier Core Observations</span>
+            <h4 className="font-serif text-lg font-bold text-brand-charcoal mt-1 mb-3">Live intelligence summary</h4>
+            <ul className="space-y-3.5 text-xs text-brand-charcoal/80 leading-relaxed list-disc pl-4 font-sans max-h-56 overflow-y-auto">
+              {leadCategory && leadCategory.revenue > 0 ? (
+                <li>
+                  The <strong className="text-brand-charcoal font-semibold">{leadCategory.label}</strong> category is your highest performing sector, accounting for <strong className="font-mono">{leadCategory.share.toFixed(1)}%</strong> of absolute recorded database revenue.
+                </li>
+              ) : (
+                <li>Awaiting more historical transactions to formulate categorical lead intelligence.</li>
+              )}
+              {topProductObj ? (
+                <li>
+                  <strong className="text-brand-charcoal font-semibold">{topProductObj.product.name}</strong> is the most sought-after piece with <strong className="font-mono">{topProductObj.quantity}</strong> checked out quantities.
+                </li>
+              ) : null}
+              {totalOrdersCount > 0 ? (
+                <li>
+                  We have registered <strong className="font-mono">{totalOrdersCount}</strong> validated checkout baskets with an average of <strong className="font-mono">{Math.round(totalItemsSold / totalOrdersCount)}</strong> masterpiece items per checkout.
+                </li>
+              ) : null}
+              {pendingOrdersCount > 0 ? (
+                <li>
+                  There are currently <strong className="font-semibold text-brand-terracotta">{pendingOrdersCount} orders as pending</strong> in the processing queue. Update or verify their payment states in the Payment logs.
+                </li>
+              ) : (
+                <li>Outstanding checkout verification logs are fully clear. Nice job keeps!</li>
+              )}
             </ul>
           </div>
-          <p className="text-[10.5px] text-brand-clay italic border-t border-brand-clay/15 pt-4 mt-6">
-            Data compiles from Google Firebase and custom cloud logs daily at 00:00 UTC.
-          </p>
+
+          {/* Leaders Board */}
+          <div className="bg-brand-bg border border-brand-clay/15 p-6 rounded-3xl shadow-xs flex-1">
+            <h4 className="font-serif text-sm font-bold text-brand-charcoal mb-4">Design Pieces Leaderboard</h4>
+            <div className="space-y-3.5">
+              {topProducts.map((stat, idx) => (
+                <div key={stat.product.id} className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-lg bg-brand-beige/50 text-brand-olive font-mono text-[10px] font-bold flex items-center justify-center border border-brand-clay/10 shrink-0">
+                    #{idx + 1}
+                  </div>
+                  <img 
+                    src={stat.product.image || null} 
+                    alt={stat.product.name} 
+                    className="w-10 h-10 object-cover rounded-md border border-brand-clay/10 shrink-0" 
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <span className="font-bold text-xs text-brand-charcoal block truncate">{stat.product.name}</span>
+                    <span className="text-[10px] text-brand-clay block font-mono">৳{stat.product.price.toLocaleString()}</span>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="font-mono text-xs font-bold text-brand-olive block">{stat.quantity} sold</span>
+                    <span className="text-[10px] text-brand-clay block font-mono">৳{stat.revenue.toLocaleString()}</span>
+                  </div>
+                </div>
+              ))}
+
+              {topProducts.length === 0 && (
+                <div className="py-8 text-center text-xs text-brand-clay font-sans">
+                  Checkout data empty. Lead dashboard updates on client checkouts.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1962,10 +2316,11 @@ const AnalyticsDetailedView: React.FC<AnalyticsProps> = ({ products, orders }) =
 // ====================================================
 interface HomeEditorPanelProps {
   initialSettings: SiteSettings;
+  products: Product[];
   onSave: (settings: SiteSettings) => void;
 }
 
-const HomeEditorPanel: React.FC<HomeEditorPanelProps> = ({ initialSettings, onSave }) => {
+const HomeEditorPanel: React.FC<HomeEditorPanelProps> = ({ initialSettings, products, onSave }) => {
   const [heroTitleLine1, setHeroTitleLine1] = useState(initialSettings.heroTitleLine1 || 'Archived Loom.');
   const [heroTitleLine2, setHeroTitleLine2] = useState(initialSettings.heroTitleLine2 || 'Slow Crafted.');
   const [heroDescription, setHeroDescription] = useState(initialSettings.heroDescription || '');
@@ -1980,6 +2335,7 @@ const HomeEditorPanel: React.FC<HomeEditorPanelProps> = ({ initialSettings, onSa
   const [workflowPretitle, setWorkflowPretitle] = useState(initialSettings.workflowPretitle || '');
   const [workflowTitle, setWorkflowTitle] = useState(initialSettings.workflowTitle || '');
   const [workflowSubtitle, setWorkflowSubtitle] = useState(initialSettings.workflowSubtitle || '');
+  const [sliderProductIds, setSliderProductIds] = useState<string[]>(initialSettings.sliderProductIds || ['saree-nilufer', 'jewelry-poromatshya', 'pot-kolsi-luxury', 'bangles-mukta', 'saree-boshonto']);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1998,8 +2354,17 @@ const HomeEditorPanel: React.FC<HomeEditorPanelProps> = ({ initialSettings, onSa
       philosophyCardSubtitle,
       workflowPretitle,
       workflowTitle,
-      workflowSubtitle
+      workflowSubtitle,
+      sliderProductIds
     });
+  };
+
+  const toggleSliderProduct = (id: string) => {
+    if (sliderProductIds.includes(id)) {
+      setSliderProductIds(sliderProductIds.filter(item => item !== id));
+    } else {
+      setSliderProductIds([...sliderProductIds, id]);
+    }
   };
 
   return (
@@ -2090,6 +2455,56 @@ const HomeEditorPanel: React.FC<HomeEditorPanelProps> = ({ initialSettings, onSa
               <input type="text" value={workflowSubtitle} onChange={(e) => setWorkflowSubtitle(e.target.value)} className="w-full bg-brand-bg border border-brand-clay/40 rounded-xl px-3 py-2 focus:outline-none" />
             </div>
           </div>
+        </div>
+
+        {/* HOMEPAGE PRODUCT SLIDER SELECTOR SECTION */}
+        <div className="space-y-4 pt-4">
+          <h4 className="font-serif text-base font-semibold pb-2 border-b border-brand-clay/15 text-brand-charcoal">04 // Homepage Product Slider</h4>
+          <div className="bg-brand-bg-cream/10 border border-dashed border-brand-clay/20 p-4 rounded-xl text-xs space-y-1.5">
+            <p className="font-mono text-[9px] uppercase tracking-widest text-brand-terracotta font-bold">Orbital Carousel Direct Selection System</p>
+            <p className="text-brand-charcoal/70 leading-relaxed">
+              Choose which products are featured in the luxury 3D orbital carousel slide-show in your hero section. Selecting between 3 to 5 products is recommended to enable continuous looping orbit dynamics.
+            </p>
+          </div>
+          
+          {products.length === 0 ? (
+            <div className="text-center p-6 border border-dashed border-brand-clay/15 rounded-xl text-xs text-brand-clay">
+              No products found. Add products to specify slider showcases.
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+              {products.map((prod) => {
+                const isSelected = sliderProductIds.includes(prod.id);
+                return (
+                  <div 
+                    key={prod.id} 
+                    onClick={() => toggleSliderProduct(prod.id)}
+                    className={`border rounded-xl p-3.5 cursor-pointer transition-all duration-300 flex flex-col items-center text-center space-y-3 relative overflow-hidden bg-brand-bg select-none ${
+                      isSelected 
+                        ? 'border-brand-terracotta ring-1 ring-brand-terracotta/40 bg-brand-beige/5' 
+                        : 'border-brand-clay/20 hover:border-brand-olive/40 hover:bg-brand-beige/5'
+                    }`}
+                  >
+                    {isSelected && (
+                      <div className="absolute top-1.5 right-1.5 bg-brand-terracotta text-white font-mono text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-widest flex items-center gap-1">
+                        <Check className="w-2 h-2" /> Featured
+                      </div>
+                    )}
+                    <img 
+                      src={prod.image || null} 
+                      alt={prod.name} 
+                      className="w-14 h-14 object-cover rounded-lg border border-brand-clay/10 bg-brand-beige/20 shadow-xs" 
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="space-y-0.5">
+                      <p className="font-serif text-xs font-bold text-brand-charcoal line-clamp-2 leading-snug">{prod.name}</p>
+                      <p className="font-mono text-[10px] text-brand-olive uppercase tracking-[0.1em]">৳{prod.price}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         <button type="submit" className="w-full bg-[#5B6349] hover:bg-brand-charcoal text-brand-bg py-4 rounded-xl text-xs font-bold tracking-widest uppercase transition-colors shadow-md block cursor-pointer">
@@ -2501,16 +2916,27 @@ const SuperAdminsAccessDashboard: React.FC<SuperAdminProps> = ({ users, currentU
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('admin');
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const staffUsers = users.filter(u => u.role === 'admin' || u.role === 'superAdmin');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     if (!name || !email || !password) return;
+
+    // Enforce strong password policy for new staff members
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      setError('Password must comprise at least 8 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#).');
+      return;
+    }
+
     onCreateAdmin(name, email, password, role);
     setName('');
     setEmail('');
     setPassword('');
+    setError(null);
     setIsFormOpen(false);
   };
 
@@ -2610,13 +3036,19 @@ const SuperAdminsAccessDashboard: React.FC<SuperAdminProps> = ({ users, currentU
               exit={{ scale: 0.95, opacity: 0 }}
               className="relative bg-brand-bg max-w-md w-full p-6 sm:p-8 rounded-3xl z-10 border border-brand-clay/20 shadow-2xl font-sans"
             >
-              <button onClick={() => setIsFormOpen(false)} className="absolute top-4 right-4 p-2 rounded-full hover:bg-brand-beige bg-brand-bg/95 border border-brand-clay/15 shadow-sm">
+              <button onClick={() => { setIsFormOpen(false); setError(null); }} className="absolute top-4 right-4 p-2 rounded-full hover:bg-brand-beige bg-brand-bg/95 border border-brand-clay/15 shadow-sm">
                 <X className="w-4 h-4" />
               </button>
 
               <h4 className="font-serif text-xl font-bold mb-6 text-brand-charcoal">
                 Establish Staff Profile
               </h4>
+
+              {error && (
+                <div className="bg-brand-terracotta/10 border border-brand-terracotta/40 text-brand-charcoal p-3 rounded-xl text-xs sm:text-sm mb-4 leading-relaxed">
+                  {error}
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-4 text-xs sm:text-sm">
                 <div>
@@ -2626,7 +3058,7 @@ const SuperAdminsAccessDashboard: React.FC<SuperAdminProps> = ({ users, currentU
 
                 <div>
                   <label className="block text-[10px] font-bold tracking-widest text-[#555555] uppercase mb-1">Staff Email Coordinates</label>
-                  <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-brand-bg border border-brand-clay/40 rounded-xl px-3 py-2 focus:outline-none focus:border-brand-terracotta" placeholder="samina@rangheritage.com" />
+                  <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-brand-bg border border-brand-clay/40 rounded-xl px-3 py-2 focus:outline-none focus:border-brand-terracotta" placeholder="samina@rongoheritage.com" />
                 </div>
 
                 <div>
@@ -2644,6 +3076,443 @@ const SuperAdminsAccessDashboard: React.FC<SuperAdminProps> = ({ users, currentU
 
                 <button type="submit" className="w-full bg-[#5B6349] hover:bg-[#2D2A26] text-brand-bg font-bold uppercase tracking-widest py-3.5 rounded-xl transition-colors mt-4 block cursor-pointer">
                   Authorise Staff Access
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// ====================================================
+// SUB-PANEL: KEEPER REVIEWS MANAGER
+// ====================================================
+interface ReviewsManagementPanelProps {
+  reviews: Testimonial[];
+  onReload: () => void;
+  triggerToast: (msg: string) => void;
+}
+
+export const ReviewsManagementPanel: React.FC<ReviewsManagementPanelProps> = ({ reviews, onReload, triggerToast }) => {
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingReview, setEditingReview] = useState<Testimonial | null>(null);
+
+  const [name, setName] = useState('');
+  const [quote, setQuote] = useState('');
+  const [location, setLocation] = useState('');
+  const [approved, setApproved] = useState(true);
+
+  const handleOpenCreate = () => {
+    setEditingReview(null);
+    setName('');
+    setQuote('');
+    setLocation('');
+    setApproved(true);
+    setIsFormOpen(true);
+  };
+
+  const handleOpenEdit = (rev: Testimonial) => {
+    setEditingReview(rev);
+    setName(rev.name);
+    setQuote(rev.quote);
+    setLocation(rev.location);
+    setApproved(rev.approved !== false);
+    setIsFormOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const reviewPayload: Testimonial = {
+        id: editingReview ? editingReview.id : 'rev_' + Date.now(),
+        name,
+        role: editingReview ? editingReview.role : 'Global Patron',
+        quote,
+        location: location || 'Atelier Patrons',
+        approved,
+        createdAt: editingReview?.createdAt || new Date().toISOString()
+      };
+
+      if (firestore.saveReview) {
+        await firestore.saveReview(reviewPayload);
+        triggerToast(editingReview ? 'Keeper Review updated.' : 'Review successfully registered.');
+        setIsFormOpen(false);
+        onReload();
+      }
+    } catch (err: any) {
+      triggerToast(err.message || 'Operation failed.');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Delete review permanently? This cannot be undone.')) return;
+    try {
+      if (firestore.deleteReview) {
+        await firestore.deleteReview(id);
+        triggerToast('Review deleted permanently.');
+        onReload();
+      }
+    } catch (err: any) {
+      triggerToast(err.message || 'Delete operation failed.');
+    }
+  };
+
+  const handleToggleApprove = async (rev: Testimonial) => {
+    try {
+      if (firestore.saveReview) {
+        await firestore.saveReview({
+          ...rev,
+          approved: !rev.approved
+        });
+        triggerToast(rev.approved ? 'Review hidden (unapproved).' : 'Review approved & published successfully!');
+        onReload();
+      }
+    } catch (err: any) {
+      triggerToast(err.message || 'Approval state change failed.');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-brand-bg p-6 rounded-2xl border border-brand-clay/15 shadow-sm">
+        <div>
+          <h3 className="font-serif text-xl font-bold text-brand-charcoal">Voice of the Keepers (Keeper Reviews)</h3>
+          <p className="text-xs text-brand-clay mt-1">Moderate customer reviews or add new testimonies directly into the core system.</p>
+        </div>
+        <button
+          onClick={handleOpenCreate}
+          className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold tracking-widest text-[#FAF7F2] bg-[#2D2A26] hover:bg-[#403B37] rounded-xl transition-all cursor-pointer uppercase shrink-0"
+        >
+          <Plus className="w-4 h-4" /> Add Testimonial
+        </button>
+      </div>
+
+      <div className="bg-brand-bg border border-brand-clay/15 rounded-2xl overflow-hidden shadow-sm">
+        <div className="overflow-x-auto text-xs sm:text-sm">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-brand-beige/25 border-b border-brand-clay/10 text-brand-olive font-bold tracking-wider text-[10px] uppercase">
+                <th className="py-4 px-6">Patron Info</th>
+                <th className="py-4 px-6">Testimony Description</th>
+                <th className="py-4 px-6">Status</th>
+                <th className="py-4 px-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-brand-clay/10 text-brand-charcoal/90">
+              {reviews.map((rev) => (
+                <tr key={rev.id} className="hover:bg-brand-beige/5 transition-colors">
+                  <td className="py-4 px-6">
+                    <span className="font-bold block text-sm">{rev.name}</span>
+                    <span className="text-[10px] text-brand-clay block mt-0.5">{rev.location}</span>
+                  </td>
+                  <td className="py-4 px-6 max-w-md">
+                    <p className="italic leading-relaxed font-serif text-xs block text-justify mb-1">“{rev.quote}”</p>
+                  </td>
+                  <td className="py-4 px-6">
+                    <button
+                      onClick={() => handleToggleApprove(rev)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase transition-colors select-none ${
+                        rev.approved 
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                          : 'bg-[#B49275]/25 text-[#2D2A26] border border-brand-clay/15 animate-pulse'
+                      }`}
+                    >
+                      {rev.approved ? 'Approved & Live' : 'Pending Approvals'}
+                    </button>
+                  </td>
+                  <td className="py-4 px-6 text-right space-x-1.5 shrink-0 whitespace-nowrap">
+                    <button
+                      onClick={() => handleToggleApprove(rev)}
+                      className="inline-flex p-2 rounded-xl text-brand-olive hover:bg-brand-beige bg-brand-bg border border-brand-clay/15 transition-all cursor-pointer"
+                      title={rev.approved ? "Hide from homepage" : "Publish to homepage"}
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleOpenEdit(rev)}
+                      className="inline-flex p-2 rounded-xl text-indigo-600 hover:bg-brand-beige bg-brand-bg border border-brand-clay/15 transition-all cursor-pointer"
+                      title="Edit testimony"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(rev.id)}
+                      className="inline-flex p-2 rounded-xl text-brand-terracotta hover:bg-brand-beige bg-brand-bg border border-brand-clay/15 transition-all cursor-pointer"
+                      title="Delete review"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {reviews.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="py-12 text-center text-brand-clay text-xs">
+                    No testimonies registered under Firebase collections yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {isFormOpen && (
+          <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-brand-charcoal/45 backdrop-blur-xs" onClick={() => setIsFormOpen(false)} />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative bg-brand-bg max-w-md w-full p-6 sm:p-8 rounded-3xl z-10 border border-brand-clay/20 shadow-2xl font-sans"
+            >
+              <button onClick={() => setIsFormOpen(false)} className="absolute top-4 right-4 p-2 rounded-full hover:bg-brand-beige bg-brand-bg/95 border border-brand-clay/15 shadow-sm">
+                <X className="w-4 h-4" />
+              </button>
+
+              <h4 className="font-serif text-xl font-bold mb-6 text-brand-charcoal">
+                {editingReview ? 'Edit Review Testimony' : 'Add Strategic Review'}
+              </h4>
+
+              <form onSubmit={handleSubmit} className="space-y-4 text-xs sm:text-sm">
+                <div>
+                  <label className="block text-[10px] font-bold tracking-widest text-[#555555] uppercase mb-1">Patron's Full Name *</label>
+                  <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-brand-bg border border-brand-clay/40 rounded-xl px-3 py-2 focus:outline-none focus:border-brand-terracotta text-brand-charcoal text-xs" placeholder="e.g., Anika Rahman" />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold tracking-widest text-[#555555] uppercase mb-1">Location / Coordinates *</label>
+                  <input type="text" required value={location} onChange={(e) => setLocation(e.target.value)} className="w-full bg-brand-bg border border-brand-clay/40 rounded-xl px-3 py-2 focus:outline-none focus:border-brand-terracotta text-brand-charcoal text-xs" placeholder="e.g., Sonargaon, Bangladesh" />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold tracking-widest text-[#555555] uppercase mb-1">Review Statement *</label>
+                  <textarea required rows={4} value={quote} onChange={(e) => setQuote(e.target.value)} className="w-full bg-brand-bg border border-brand-clay/40 rounded-xl px-3 py-2 focus:outline-none focus:border-brand-terracotta text-brand-charcoal text-xs leading-relaxed" placeholder="Write review..." />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="approvedReview" checked={approved} onChange={(e) => setApproved(e.target.checked)} className="rounded border-brand-clay/40 text-[#2D2A26] focus:ring-0" />
+                  <label htmlFor="approvedReview" className="text-xs font-semibold text-brand-charcoal select-none">Publish instantly (approved)</label>
+                </div>
+
+                <button type="submit" className="w-full bg-[#5B6349] hover:bg-[#2D2A26] text-brand-bg font-bold uppercase tracking-widest py-3.5 rounded-xl transition-colors mt-4 block cursor-pointer text-xs">
+                  {editingReview ? 'Save Testimony' : 'Register Testimony'}
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// ====================================================
+// SUB-PANEL: COMMUNITY SNAPSHOTS MANAGER
+// ====================================================
+interface SnapshotsManagementPanelProps {
+  snapshots: CommunitySnap[];
+  onReload: () => void;
+  triggerToast: (msg: string) => void;
+}
+
+export const SnapshotsManagementPanel: React.FC<SnapshotsManagementPanelProps> = ({ snapshots, onReload, triggerToast }) => {
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingSnap, setEditingSnap] = useState<CommunitySnap | null>(null);
+
+  const [title, setTitle] = useState('');
+  const [location, setLocation] = useState('');
+  const [img, setImg] = useState('');
+  const [approved, setApproved] = useState(true);
+
+  const handleOpenCreate = () => {
+    setEditingSnap(null);
+    setTitle('');
+    setLocation('');
+    setImg('');
+    setApproved(true);
+    setIsFormOpen(true);
+  };
+
+  const handleOpenEdit = (snap: CommunitySnap) => {
+    setEditingSnap(snap);
+    setTitle(snap.title);
+    setLocation(snap.location);
+    setImg(snap.img);
+    setApproved(snap.approved !== false);
+    setIsFormOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const snapPayload: CommunitySnap = {
+        id: editingSnap ? editingSnap.id : 'snap_' + Date.now(),
+        title,
+        location: location || 'Atelier Memory',
+        img,
+        approved,
+        createdAt: editingSnap?.createdAt || new Date().toISOString(),
+        submittedBy: editingSnap?.submittedBy || 'Administrator'
+      };
+
+      if (firestore.saveCommunitySnap) {
+        await firestore.saveCommunitySnap(snapPayload);
+        triggerToast(editingSnap ? 'Community snapshot updated.' : 'Memory successfully uploaded.');
+        setIsFormOpen(false);
+        onReload();
+      }
+    } catch (err: any) {
+      triggerToast(err.message || 'Operation failed.');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Delete snapshot permanently? This cannot be undone.')) return;
+    try {
+      if (firestore.deleteCommunitySnap) {
+        await firestore.deleteCommunitySnap(id);
+        triggerToast('Memory deleted successfully.');
+        onReload();
+      }
+    } catch (err: any) {
+      triggerToast(err.message || 'Delete operation failed.');
+    }
+  };
+
+  const handleToggleApprove = async (snap: CommunitySnap) => {
+    try {
+      if (firestore.saveCommunitySnap) {
+        await firestore.saveCommunitySnap({
+          ...snap,
+          approved: !snap.approved
+        });
+        triggerToast(snap.approved ? 'Snapshot hidden (unapproved).' : 'Snapshot approved and catalogued!');
+        onReload();
+      }
+    } catch (err: any) {
+      triggerToast(err.message || 'Approval operation failed.');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-brand-bg p-6 rounded-2xl border border-brand-clay/15 shadow-sm">
+        <div>
+          <h3 className="font-serif text-xl font-bold text-brand-charcoal">Atelier Community Snapshots (Scrapbook Wall)</h3>
+          <p className="text-xs text-brand-clay mt-1">Manage, approve, or expand heritage memories submitted to the global scrapbook.</p>
+        </div>
+        <button
+          onClick={handleOpenCreate}
+          className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold tracking-widest text-[#FAF7F2] bg-[#2D2A26] hover:bg-[#403B37] rounded-xl transition-all cursor-pointer uppercase shrink-0"
+        >
+          <Plus className="w-4 h-4" /> Add Memory Snap
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {snapshots.map((snap) => (
+          <div key={snap.id} className="bg-brand-bg border border-brand-clay/15 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between">
+            <div className="relative aspect-square w-full bg-[#FAF7F2]">
+              <img src={snap.img || null} alt={snap.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              <div className="absolute top-2 left-2">
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border tracking-wider select-none ${
+                  snap.approved
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : 'bg-[#B49275]/25 text-[#2D2A26] border-brand-clay/15 animate-pulse'
+                }`}>
+                  {snap.approved ? 'Live' : 'Pending'}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-4 flex-1 flex flex-col justify-between">
+              <div className="mb-4">
+                <span className="text-[9px] font-semibold text-brand-olive uppercase tracking-wider block">{snap.location}</span>
+                <h4 className="font-serif text-sm font-bold text-brand-charcoal mt-1 line-clamp-1">{snap.title}</h4>
+                <p className="text-[10px] text-brand-clay mt-1">Submitted by: {snap.submittedBy || 'System'}</p>
+              </div>
+
+              <div className="flex items-center gap-2 border-t border-brand-clay/10 pt-3">
+                <button
+                  onClick={() => handleToggleApprove(snap)}
+                  className={`flex-1 py-1.5 rounded-lg border text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-1 ${
+                    snap.approved 
+                      ? 'bg-brand-bg text-brand-clay border-brand-clay/20 hover:bg-brand-beige' 
+                      : 'bg-[#5B6349] text-white border-transparent hover:bg-brand-charcoal'
+                  }`}
+                >
+                  <Check className="w-3 h-3" /> {snap.approved ? 'Unapprove' : 'Approve'}
+                </button>
+                <button
+                  onClick={() => handleOpenEdit(snap)}
+                  className="p-1.5 rounded-lg border border-brand-clay/20 text-[#2D2A26] hover:bg-brand-beige bg-brand-bg transition-all"
+                  title="Edit Snapshot"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => handleDelete(snap.id)}
+                  className="p-1.5 rounded-lg border border-brand-clay/20 text-brand-terracotta hover:bg-brand-beige bg-brand-bg transition-all"
+                  title="Remove Snapshot"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+        {snapshots.length === 0 && (
+          <div className="col-span-full py-12 text-center text-brand-clay text-xs bg-brand-bg rounded-2xl border border-brand-clay/15">
+            No memories submitted to the collection.
+          </div>
+        )}
+      </div>
+
+      <AnimatePresence>
+        {isFormOpen && (
+          <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-brand-charcoal/45 backdrop-blur-xs" onClick={() => setIsFormOpen(false)} />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative bg-brand-bg max-w-md w-full p-6 sm:p-8 rounded-3xl z-10 border border-brand-clay/20 shadow-2xl font-sans"
+            >
+              <button onClick={() => setIsFormOpen(false)} className="absolute top-4 right-4 p-2 rounded-full hover:bg-brand-beige bg-brand-bg/95 border border-brand-clay/15 shadow-sm">
+                <X className="w-4 h-4" />
+              </button>
+
+              <h4 className="font-serif text-xl font-bold mb-6 text-brand-charcoal">
+                {editingSnap ? 'Edit Scrapbook Memory' : 'Incorporate Memory Snap'}
+              </h4>
+
+              <form onSubmit={handleSubmit} className="space-y-4 text-xs sm:text-sm">
+                <div>
+                  <label className="block text-[10px] font-bold tracking-widest text-[#555555] uppercase mb-1">Snapshot Title *</label>
+                  <input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-brand-bg border border-brand-clay/40 rounded-xl px-3 py-2 focus:outline-none focus:border-brand-terracotta text-brand-charcoal text-xs" placeholder="e.g., Artisan Crafting" />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold tracking-widest text-[#555555] uppercase mb-1">Location Coordinates *</label>
+                  <input type="text" required value={location} onChange={(e) => setLocation(e.target.value)} className="w-full bg-brand-bg border border-brand-clay/40 rounded-xl px-3 py-2 focus:outline-none focus:border-brand-terracotta text-brand-charcoal text-xs" placeholder="e.g., Studio, Sonargaon" />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold tracking-widest text-[#555555] uppercase mb-1">Image URL Address *</label>
+                  <input type="url" required value={img} onChange={(e) => setImg(e.target.value)} className="w-full bg-brand-bg border border-brand-clay/40 rounded-xl px-3 py-2 focus:outline-none focus:border-brand-terracotta text-brand-charcoal text-xs" placeholder="e.g., https://unsplash.com/..." />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="approvedSnap" checked={approved} onChange={(e) => setApproved(e.target.checked)} className="rounded border-brand-clay/40 text-[#2D2A26] focus:ring-0" />
+                  <label htmlFor="approvedSnap" className="text-xs font-semibold text-brand-charcoal select-none">Publish instantly (approved)</label>
+                </div>
+
+                <button type="submit" className="w-full bg-[#5B6349] hover:bg-[#2D2A26] text-brand-bg font-bold uppercase tracking-widest py-3.5 rounded-xl transition-colors mt-4 block cursor-pointer text-xs">
+                  {editingSnap ? 'Update Snap Memory' : 'Engrave Snap Memory'}
                 </button>
               </form>
             </motion.div>

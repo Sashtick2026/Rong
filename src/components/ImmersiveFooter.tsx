@@ -59,8 +59,8 @@ export const ImmersiveFooter: React.FC<ImmersiveFooterProps> = ({
   };
 
   const handleNav = (href: string) => {
-    if (href === 'home' || href === 'shop' || href === 'story' || href === 'journal' || href === 'contact') {
-      setCurrentPage(href);
+    if (href === 'home' || href === 'shop' || href === 'story' || href === 'about' || href === 'journal' || href === 'contact') {
+      setCurrentPage(href === 'story' ? 'about' : href);
     } else {
       setCurrentPage('home');
     }
@@ -129,7 +129,7 @@ export const ImmersiveFooter: React.FC<ImmersiveFooterProps> = ({
       </div>
 
       {/* 4. LAYER: CENTERPIECE IMMERSIVE HERO LOGO WITH BRUSHSTROKE PARALLAX MAP */}
-      <div className="relative w-full py-10 flex flex-col items-center justify-center text-center z-1 gap-1 min-h-[35vh]">
+      <div className="relative w-full py-10 flex flex-col items-center justify-center text-center z-10 gap-1 min-h-[35vh]">
         {/* Animated Drawing Brushstroke Backdrop */}
         <motion.div 
           style={{
@@ -155,7 +155,7 @@ export const ImmersiveFooter: React.FC<ImmersiveFooterProps> = ({
            {/* Logo Brand Illustration */}
           {(activeSettings.logoUrl || firestore.getSettings().logoUrl) ? (
             <img 
-              src={activeSettings.logoUrl || firestore.getSettings().logoUrl} 
+              src={activeSettings.logoUrl || firestore.getSettings().logoUrl || undefined} 
               alt={activeSettings.brandName} 
               className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-full shadow-lg border border-brand-clay/25 p-0.5 opacity-95 mb-2 bg-[#FAF7F2]"
               referrerPolicy="no-referrer"
@@ -212,178 +212,191 @@ export const ImmersiveFooter: React.FC<ImmersiveFooterProps> = ({
         ))}
       </div>
 
-      {/* MAIN FOOTER DIRECTORIES AND NEWSLETTER BLOCK */}
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 md:gap-12 mt-16 pb-12 border-b border-brand-clay/15 text-xs text-[#ECE7E1]/80">
+      {/* BOTTOM SECTIONS CONTAINER */}
+      <div className="relative z-10 w-full mt-16 space-y-8">
         
-        {/* Section 1: Dynamic Brand Curation Box & Newsletter */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="space-y-3">
-            <h4 className="font-serif text-[#FFFFFF] text-sm tracking-wider uppercase font-bold flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-brand-terracotta" />
-              <span>{activeSettings.newsletterTitle}</span>
-            </h4>
-            <p className="text-xs text-[#C8C2BB] leading-relaxed max-w-sm">
-              {activeSettings.newsletterDescription}
-            </p>
+        {/* MAIN FOOTER DIRECTORIES AND NEWSLETTER BLOCK */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 md:gap-12 pb-12 border-b border-brand-clay/15 text-xs text-[#ECE7E1]/80">
+          
+          {/* Section 1: Dynamic Brand Curation Box & Newsletter */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="space-y-3">
+              <h4 className="font-serif text-[#FFFFFF] text-sm tracking-wider uppercase font-bold flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-brand-terracotta" />
+                <span>{activeSettings.newsletterTitle}</span>
+              </h4>
+              <p className="text-xs text-[#C8C2BB] leading-relaxed max-w-sm">
+                {activeSettings.newsletterDescription}
+              </p>
+            </div>
+
+            <form onSubmit={handleSubscribe} className="relative max-w-sm group">
+              <input 
+                type="email"
+                placeholder="Inscribe email coordinate..."
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                className="w-full bg-[#24211F] border border-brand-clay/25 rounded-xl py-3 px-4 pr-12 text-xs focus:outline-none focus:border-brand-terracotta text-white transition-all shadow-inner placeholder:text-gray-500"
+              />
+              <button 
+                type="submit"
+                className="absolute right-1 top-1 bottom-1 px-3 bg-brand-charcoal text-brand-terracotta hover:bg-brand-terracotta hover:text-brand-bg rounded-lg flex items-center justify-center transition-all duration-300"
+                title="Dispatch secure coordinate subscription"
+              >
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </form>
+
+            {subscribed && (
+              <p className="text-[10px] text-brand-olive font-bold uppercase tracking-widest block animate-pulse">
+                ✓ Collector Dispatch Logged Successfully.
+              </p>
+            )}
           </div>
 
-          <form onSubmit={handleSubscribe} className="relative max-w-sm group">
-            <input 
-              type="email"
-              placeholder="Inscribe email coordinate..."
-              value={emailInput}
-              onChange={(e) => setEmailInput(e.target.value)}
-              className="w-full bg-[#24211F] border border-brand-clay/25 rounded-xl py-3 px-4 pr-12 text-xs focus:outline-none focus:border-brand-terracotta text-white transition-all shadow-inner placeholder:text-gray-500"
-            />
-            <button 
-              type="submit"
-              className="absolute right-1 top-1 bottom-1 px-3 bg-brand-charcoal text-brand-terracotta hover:bg-brand-terracotta hover:text-brand-bg rounded-lg flex items-center justify-center transition-all duration-300"
-              title="Dispatch secure coordinate subscription"
-            >
-              <Send className="w-3.5 h-3.5" />
-            </button>
-          </form>
+          {/* Section 2: Heritage Navigation */}
+          <div className="space-y-4">
+            <h4 className="font-serif text-[#FFFFFF] text-xs font-semibold tracking-widest uppercase border-b border-brand-clay/10 pb-1.5">
+              Portfolio Navigation
+            </h4>
+            <ul className="space-y-2.5 font-sans">
+              {activeSettings.navigationLinks && activeSettings.navigationLinks.map((link, idx) => (
+                <li key={idx} className="group">
+                  <button
+                    onClick={() => handleNav(link.href)}
+                    className="hover:text-brand-terracotta transition-colors uppercase tracking-widest text-[9.5px] font-bold flex items-center gap-1"
+                  >
+                    <span className="w-0 group-hover:w-1.5 h-[1px] bg-brand-terracotta transition-all duration-300" />
+                    <span>{link.label}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-          {subscribed && (
-            <p className="text-[10px] text-brand-olive font-bold uppercase tracking-widest block animate-pulse">
-              ✓ Collector Dispatch Logged Successfully.
-            </p>
-          )}
-        </div>
+          {/* Section 3: Featured Collections (Loaded dynamically from DB) */}
+          <div className="space-y-4">
+            <h4 className="font-serif text-[#FFFFFF] text-xs font-semibold tracking-widest uppercase border-b border-brand-clay/10 pb-1.5">
+              Featured Mediums
+            </h4>
+            <ul className="space-y-2 text-xs">
+              {collections.slice(0, 4).map((col) => (
+                <li key={col.id} className="group">
+                  <button
+                    onClick={() => {
+                      setCategoryFilter(col.id === 'col_1' ? 'sarees' : col.id === 'col_2' ? 'jewelry' : col.id === 'col_3' ? 'khadi' : 'all');
+                      setCurrentPage('shop');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="hover:text-white text-[#C8C2BB] transition-colors text-[10.5px] uppercase tracking-widest flex items-center gap-1.5"
+                  >
+                    <span className="w-1 h-1 rounded-full bg-brand-clay opacity-40 group-hover:bg-brand-terracotta group-hover:opacity-100 transition-all" />
+                    <span>{col.name}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-        {/* Section 2: Heritage Navigation */}
-        <div className="space-y-4">
-          <h4 className="font-serif text-[#FFFFFF] text-xs font-semibold tracking-widest uppercase border-b border-brand-clay/10 pb-1.5">
-            Portfolio Navigation
-          </h4>
-          <ul className="space-y-2.5 font-sans">
-            {activeSettings.navigationLinks && activeSettings.navigationLinks.map((link, idx) => (
-              <li key={idx} className="group">
-                <button
-                  onClick={() => handleNav(link.href)}
-                  className="hover:text-brand-terracotta transition-colors uppercase tracking-widest text-[9.5px] font-bold flex items-center gap-1"
-                >
-                  <span className="w-0 group-hover:w-1.5 h-[1px] bg-brand-terracotta transition-all duration-300" />
-                  <span>{link.label}</span>
-                </button>
+          {/* Section 4: Contact Information */}
+          <div className="space-y-4">
+            <h4 className="font-serif text-[#FFFFFF] text-xs font-semibold tracking-widest uppercase border-b border-brand-clay/10 pb-1.5">
+              Atelier Enquiries
+            </h4>
+            <ul className="space-y-3 font-mono text-[10.5px]">
+              <li className="flex items-start gap-2 text-[#C8C2BB]/90">
+                <MapPin className="w-3.5 h-3.5 text-brand-terracotta shrink-0 mt-0.5" />
+                <span>{activeSettings.address}</span>
               </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Section 3: Featured Collections (Loaded dynamically from DB) */}
-        <div className="space-y-4">
-          <h4 className="font-serif text-[#FFFFFF] text-xs font-semibold tracking-widest uppercase border-b border-brand-clay/10 pb-1.5">
-            Featured Mediums
-          </h4>
-          <ul className="space-y-2 text-xs">
-            {collections.slice(0, 4).map((col) => (
-              <li key={col.id} className="group">
-                <button
-                  onClick={() => {
-                    setCategoryFilter(col.id === 'col_1' ? 'sarees' : col.id === 'col_2' ? 'jewelry' : col.id === 'col_3' ? 'khadi' : 'all');
-                    setCurrentPage('shop');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className="hover:text-white text-[#C8C2BB] transition-colors text-[10.5px] uppercase tracking-widest flex items-center gap-1.5"
-                >
-                  <span className="w-1 h-1 rounded-full bg-brand-clay opacity-40 group-hover:bg-brand-terracotta group-hover:opacity-100 transition-all" />
-                  <span>{col.name}</span>
-                </button>
+              <li className="flex items-center gap-2">
+                <Phone className="w-3.5 h-3.5 text-brand-olive shrink-0" />
+                <a href={`tel:${activeSettings.phone}`} className="hover:text-brand-terracotta tracking-tight transition-colors">
+                  {activeSettings.phone}
+                </a>
               </li>
-            ))}
-          </ul>
+              <li className="flex items-center gap-2">
+                <Mail className="w-3.5 h-3.5 text-brand-olive shrink-0" />
+                <a href={`mailto:${activeSettings.email}`} className="hover:text-brand-terracotta hover:underline transition-colors leading-none truncate max-w-full">
+                  {activeSettings.email}
+                </a>
+              </li>
+            </ul>
+          </div>
+
         </div>
 
-        {/* Section 4: Contact Information */}
-        <div className="space-y-4">
-          <h4 className="font-serif text-[#FFFFFF] text-xs font-semibold tracking-widest uppercase border-b border-brand-clay/10 pb-1.5">
-            Atelier Enquiries
-          </h4>
-          <ul className="space-y-3 font-mono text-[10.5px]">
-            <li className="flex items-start gap-2 text-[#C8C2BB]/90">
-              <MapPin className="w-3.5 h-3.5 text-brand-terracotta shrink-0 mt-0.5" />
-              <span>{activeSettings.address}</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <Phone className="w-3.5 h-3.5 text-brand-olive shrink-0" />
-              <a href={`tel:${activeSettings.phone}`} className="hover:text-brand-terracotta tracking-tight transition-colors">
-                {activeSettings.phone}
+        {/* Section 5: Brand Identity Social Matrix */}
+        <div className="relative flex flex-col sm:flex-row items-center justify-between py-6 gap-6 border-b border-brand-clay/10">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-brand-terracotta animate-ping" />
+            <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-brand-clay font-bold">
+              Live Heritage Matrix Feed
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-4 items-center">
+            {activeSettings.socialLinks.instagram && (
+              <a
+                href={activeSettings.socialLinks.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-full bg-[#24211F] hover:bg-[#E2536D] text-brand-clay hover:text-white flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-md"
+                title="Saree Looming Gram"
+              >
+                <Instagram className="w-4 h-4" />
               </a>
-            </li>
-            <li className="flex items-center gap-2">
-              <Mail className="w-3.5 h-3.5 text-brand-olive shrink-0" />
-              <a href={`mailto:${activeSettings.email}`} className="hover:text-brand-terracotta hover:underline transition-colors leading-none truncate max-w-full">
-                {activeSettings.email}
+            )}
+            {activeSettings.socialLinks.facebook && (
+              <a
+                href={activeSettings.socialLinks.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-full bg-[#24211F] hover:bg-[#3D5B94] text-[#C8C2BB] hover:text-white flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-md"
+                title="Heritage Gallery Feed"
+              >
+                <Facebook className="w-4 h-4" />
               </a>
-            </li>
-          </ul>
+            )}
+            {activeSettings.socialLinks.whatsapp && (
+              <a
+                href={activeSettings.socialLinks.whatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-full bg-[#24211F] hover:bg-[#20BE54] text-brand-clay hover:text-white flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-md"
+                title="Atelier Curator Chat"
+              >
+                <Globe className="w-4 h-4" />
+              </a>
+            )}
+            {activeSettings.socialLinks.youtube && (
+              <a
+                href={activeSettings.socialLinks.youtube}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-full bg-[#24211F] hover:bg-[#CD201F] text-brand-clay hover:text-white flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-md"
+                title="Curation Documentaries"
+              >
+                <Youtube className="w-4 h-4" />
+              </a>
+            )}
+          </div>
         </div>
 
-      </div>
+        {/* Section 6: Copyright & Editorial Closing */}
+        <div className="relative flex flex-col sm:flex-row items-center justify-between text-[10px] text-brand-clay/80 font-sans gap-4 pt-4">
+          <div>
+            <p>{activeSettings.copyrightText}</p>
+          </div>
 
-      {/* Section 5: Brand Identity Social Matrix */}
-      <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between py-6 gap-6 border-b border-brand-clay/10 col-span-1 lg:col-span-5">
-        <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-brand-terracotta animate-ping" />
-          <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-brand-clay font-bold">
-            Live Heritage Matrix Feed
-          </span>
+          <div className="flex gap-4 tracking-widest uppercase font-semibold">
+            <button onClick={() => handleNav('story')} className="hover:text-white transition-colors">Manifesto Line</button>
+            <span>•</span>
+            <button onClick={() => handleNav('contact')} className="hover:text-white transition-colors">Secure Dialogs</button>
+            <span>•</span>
+            <span className="font-mono text-[9px] text-[#B8A189]">UTC-GEN-2026</span>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-4 items-center">
-          <a
-            href={activeSettings.socialLinks.instagram}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-8 h-8 rounded-full bg-[#24211F] hover:bg-[#E2536D] text-brand-clay hover:text-white flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-md"
-            title="Saree Looming Gram"
-          >
-            <Instagram className="w-4 h-4" />
-          </a>
-          <a
-            href={activeSettings.socialLinks.facebook}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-8 h-8 rounded-full bg-[#24211F] hover:bg-[#3D5B94] text-brand-clay hover:text-white flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-md"
-            title="Heritage Gallery Feed"
-          >
-            <Facebook className="w-4 h-4" />
-          </a>
-          <a
-            href={activeSettings.socialLinks.whatsapp}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-8 h-8 rounded-full bg-[#24211F] hover:bg-[#20BE54] text-brand-clay hover:text-white flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-md"
-            title="Atelier Curator Chat"
-          >
-            <Globe className="w-4 h-4" />
-          </a>
-          <a
-            href={activeSettings.socialLinks.youtube}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-8 h-8 rounded-full bg-[#24211F] hover:bg-[#CD201F] text-brand-clay hover:text-white flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-md"
-            title="Curation Documentaries"
-          >
-            <Youtube className="w-4 h-4" />
-          </a>
-        </div>
-      </div>
-
-      {/* Section 6: Copyright & Editorial Closing */}
-      <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between text-[10px] text-brand-clay/80 font-sans gap-4 pt-6">
-        <div>
-          <p>{activeSettings.copyrightText}</p>
-        </div>
-
-        <div className="flex gap-4 tracking-widest uppercase font-semibold">
-          <button onClick={() => handleNav('story')} className="hover:text-white transition-colors">Manifesto Line</button>
-          <span>•</span>
-          <button onClick={() => handleNav('contact')} className="hover:text-white transition-colors">Secure Dialogs</button>
-          <span>•</span>
-          <span className="font-mono text-[9px] text-[#B8A189]">UTC-GEN-2026</span>
-        </div>
       </div>
 
     </footer>
