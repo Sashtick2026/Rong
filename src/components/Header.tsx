@@ -54,7 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <div className="relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-brand-terracotta/30 bg-brand-beige/50 group-hover:border-brand-terracotta overflow-hidden transition-colors duration-300">
               <img 
-                src={settings.logoUrl || "https://i.ibb.co.com/YFW3wDm4/20260610-013250.jpg"} 
+                src={settings.logoUrl || "https://i.ibb.co/YFW3wDm4/20260610-013250.jpg"} 
                 alt="রঙ" 
                 className="w-full h-full object-cover transform scale-[1.1] group-hover:scale-125 transition-transform duration-300"
                 referrerPolicy="no-referrer"
@@ -114,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
                   className="flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-brand-beige/40 text-brand-charcoal/80 stroke-[1.5] transition-all duration-300 font-semibold"
                 >
                   <img
-                    src={currentUser.profileImage || 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png'}
+                    src={currentUser.profileImage || 'https://i.ibb.co/mV2JMRFb/Pngtree-default-male-avatar-5939655.png'}
                     alt=""
                     className="w-7 h-7 rounded-full object-cover border border-brand-clay/15 shrink-0"
                   />

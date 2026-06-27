@@ -183,15 +183,29 @@ export const HeroInteractive: React.FC<HeroInteractiveProps> = ({
       className="relative min-h-[92vh] flex flex-col justify-center overflow-hidden bg-black px-4 sm:px-6 lg:px-8 pt-8 pb-16 select-none"
     >
       {/* Immersive Cinematic Background Video Layer */}
-      <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
+      <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0 bg-neutral-950">
+        <img 
+          src="https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=1600" 
+          alt="Weaving loom fallback"
+          className="absolute inset-0 w-full h-full object-cover opacity-45"
+        />
         <video 
-          src="https://cdn.discordapp.com/attachments/1433397128155103307/1518495363756064799/Basic_Model-1782106795000.mp4?ex=6a3a2082&is=6a38cf02&hm=c5c1257a67f0f086271fc38bed460e2dc09e44d06ebbe0a0a8161285ee4578f8&"
+          poster="https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=1600"
           autoPlay
           loop
           muted
           playsInline
-          className="w-full h-full object-cover opacity-85"
-        />
+          className="absolute inset-0 w-full h-full object-cover opacity-85"
+        >
+          <source 
+            src="https://cdn.discordapp.com/attachments/1433397128155103307/1518495363756064799/Basic_Model-1782106795000.mp4?ex=6a40b802&is=6a3f6682&hm=a9981500ec004fa900e84a531dcabe79b98ce5f8b0311a83ffecbd9bc581d21c&"
+            type="video/mp4"
+          />
+          <source 
+            src="https://assets.mixkit.co/videos/preview/mixkit-weaving-loom-in-a-traditional-fabric-factory-40810-large.mp4"
+            type="video/mp4"
+          />
+        </video>
         {/* Dual gradients optimized for high contrast text readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/75 mix-blend-multiply" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/45" />
@@ -297,7 +311,7 @@ export const HeroInteractive: React.FC<HeroInteractiveProps> = ({
                   </div>
                   <h3 className="font-serif text-base font-bold text-brand-charcoal">Atelier Awaiting Showcase</h3>
                   <p className="text-[11px] text-brand-charcoal/70 leading-relaxed max-w-xs mx-auto font-sans">
-                    Your database and sales logs are clean and empty. Log in to the Curator Portal to seed test archives or upload custom handloom sarees.
+                    Our handloom showcase is currently preparing its next curated release. Sign in to the Curator Portal to update our physical stock or add custom heritage items.
                   </p>
                 </div>
 

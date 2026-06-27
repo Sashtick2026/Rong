@@ -1,6 +1,6 @@
 import React from 'react';
 import { Mail, Phone, MapPin, Feather, Compass, Info, Heart, ArrowRight, Share2, CornerDownRight, CheckCircle2 } from 'lucide-react';
-import { JournalArticle, Testimonial } from '../types';
+import { JournalArticle, Testimonial, AboutSettings } from '../types';
 import { journalArticles, testimonials } from '../data';
 import { OrganicDivider, CornerOrnament, PotteryOrnament, AlpanaCircular } from './Ornaments';
 import { motion, AnimatePresence } from 'motion/react';
@@ -10,7 +10,7 @@ import { firestore } from '../lib/mockFirebase';
 // ABOUT VIEW (Editorial, Museum-like)
 // ==========================================
 export const AboutView: React.FC = () => {
-  const settings = firestore.getAboutSettings();
+  const settings = firestore.getAboutSettings() || {} as AboutSettings;
 
   return (
     <motion.div

@@ -384,7 +384,7 @@ export const HomeSections: React.FC<HomeSectionsProps> = ({
                 {/* Central circular crest backing */}
                 <div className="w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] bg-brand-bg rounded-full border-2 border-brand-terracotta overflow-hidden flex items-center justify-center shadow-2xl relative select-none">
                   <img 
-                    src="https://i.ibb.co.com/YFW3wDm4/20260610-013250.jpg" 
+                    src="https://i.ibb.co/YFW3wDm4/20260610-013250.jpg" 
                     alt="রঙ" 
                     className="w-full h-full object-cover transform scale-105"
                     referrerPolicy="no-referrer"

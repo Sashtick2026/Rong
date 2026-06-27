@@ -35,7 +35,9 @@ import firebaseConfig from '../../firebase-applet-config.json';
 // ==========================================
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
+export const db = (firebaseConfig as any).firestoreDatabaseId 
+  ? getFirestore(app, (firebaseConfig as any).firestoreDatabaseId)
+  : getFirestore(app);
 export const auth = getAuth(app);
 
 // ==========================================
@@ -203,7 +205,7 @@ const initialUsers: UserProfile[] = [
     role: 'superAdmin',
     createdAt: '2026-01-10T12:00:00Z',
     updatedAt: '2026-06-10T03:00:00Z',
-    profileImage: 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
+    profileImage: 'https://i.ibb.co/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
     status: 'active',
     phone: '+880 1712 345678',
     address: 'Gulshan-2, Dhaka',
@@ -215,7 +217,7 @@ const initialUsers: UserProfile[] = [
     role: 'admin',
     createdAt: '2026-02-15T09:30:00Z',
     updatedAt: '2026-06-08T11:20:00Z',
-    profileImage: 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
+    profileImage: 'https://i.ibb.co/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
     status: 'active',
     phone: '+880 1819 987654',
     address: 'Banani, Dhaka',
@@ -227,7 +229,7 @@ const initialUsers: UserProfile[] = [
     role: 'customer',
     createdAt: '2026-04-01T15:22:00Z',
     updatedAt: '2026-04-01T15:22:00Z',
-    profileImage: 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
+    profileImage: 'https://i.ibb.co/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
     status: 'active',
     phone: '+880 1552 443322',
     address: 'Dhanmondi, Dhaka',
@@ -274,7 +276,7 @@ const defaultSettings: SiteSettings = {
   heroTitleLine2: 'Slow Crafted.',
   heroDescription: 'Operating as a visual culture register, রঙ archives the handloom rhythms of Bangladesh. Combining slow, kiln-fired riverbed soil and botanically dyed yarns, each curated piece stands as an authentic monument to ancient aesthetic geometries.',
   bkashNumber: '01712-345678',
-  logoUrl: 'https://i.ibb.co.com/YFW3wDm4/20260610-013250.jpg',
+  logoUrl: 'https://i.ibb.co/YFW3wDm4/20260610-013250.jpg',
   philosophyPretitle: '02 // Brand Philosophy',
   philosophyTitle1: 'We celebrate the beauty of',
   philosophyTitle2: 'handmade traditions and',
@@ -317,7 +319,7 @@ const defaultFooterSettings: FooterSettings = {
   brandName: 'রঙ',
   brandTagline: 'Where Heritage Meets Imagination',
   footerMessage: '“রঙ (Rongo) is not merely a label of accessories; it is a dedicated journal celebrating the organic longevity of Bangladeshi culture and craftsmanship.”',
-  logoUrl: 'https://i.ibb.co.com/YFW3wDm4/20260610-013250.jpg',
+  logoUrl: 'https://i.ibb.co/YFW3wDm4/20260610-013250.jpg',
   newsletterTitle: 'Sign up for our Heritage Dispatch',
   newsletterDescription: 'Receive seasonal journals, weaver schedules, limited-edition announcements and handcrafted tales of Bengal.',
   email: 'dialog@rongoheritage.com',
@@ -353,10 +355,10 @@ const defaultCoupons: Coupon[] = [
 ];
 
 const defaultPuzzlePieces: PuzzlePieces = {
-  piece1Url: 'https://i.ibb.co.com/ZpjZfBwV/lucid-origin-Ultra-detailed-museum-quality-photography-of-traditional-Bangladeshi-clay-toy-do-0.jpg',
-  piece2Url: 'https://i.ibb.co.com/20XHgmjR/lucid-origin-Luxury-editorial-flat-lay-of-authentic-Bangladeshi-handcrafted-products-displaye-0.jpg',
-  piece3Url: 'https://i.ibb.co.com/j9wtJhbR/lucid-origin-Close-up-luxury-product-photography-of-traditional-Bangladeshi-handcrafted-bangl-0.jpg',
-  piece4Url: 'https://i.ibb.co.com/Gf03kD2S/lucid-origin-Authentic-Bangladeshi-handcrafted-clay-hari-patil-pottery-collection-displayed-i-0.jpg'
+  piece1Url: 'https://i.ibb.co/ZpjZfBwV/lucid-origin-Ultra-detailed-museum-quality-photography-of-traditional-Bangladeshi-clay-toy-do-0.jpg',
+  piece2Url: 'https://i.ibb.co/20XHgmjR/lucid-origin-Luxury-editorial-flat-lay-of-authentic-Bangladeshi-handcrafted-products-displaye-0.jpg',
+  piece3Url: 'https://i.ibb.co/j9wtJhbR/lucid-origin-Close-up-luxury-product-photography-of-traditional-Bangladeshi-handcrafted-bangl-0.jpg',
+  piece4Url: 'https://i.ibb.co/Gf03kD2S/lucid-origin-Authentic-Bangladeshi-handcrafted-clay-hari-patil-pottery-collection-displayed-i-0.jpg'
 };
 
 const defaultMediaList: MediaItem[] = [
@@ -959,7 +961,7 @@ onAuthStateChanged(auth, (firebaseUser) => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         status: 'active',
-        profileImage: 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
+        profileImage: 'https://i.ibb.co/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
       };
     }
     
@@ -995,7 +997,7 @@ onAuthStateChanged(auth, (firebaseUser) => {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           status: 'active',
-          profileImage: 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
+          profileImage: 'https://i.ibb.co/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
         };
         setDoc(docRef, profile).catch(() => {});
         currentUserProfile = profile;
@@ -1021,26 +1023,34 @@ export const firebaseAuth = {
   },
 
   login: async (email: string, password: string, rememberMe?: boolean): Promise<UserProfile> => {
-    const superAdminEmail = 'rongo5707@gmail.com';
-    const superAdminPass = 'superadmin@Niloy@2007.Muiz@2008';
+    const emailLower = email.toLowerCase();
+    const superAdminEmails = [
+      'rongo5707@gmail.com',
+      'superadmin@rongo.com',
+      'superadmin@rang.com',
+      'superadmin@rong.com',
+      'sashtick26@gmail.com'
+    ];
+    const isSuperAdminEmail = superAdminEmails.includes(emailLower);
 
     try {
       // Automatic super admin registration support on login
-      if (email.toLowerCase() === superAdminEmail) {
+      if (isSuperAdminEmail) {
         try {
           await signInWithEmailAndPassword(auth, email, password);
         } catch (err: any) {
-          if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential' || err.code === 'auth/invalid-email') {
+          if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential' || err.code === 'auth/invalid-email' || err.code === 'auth/wrong-password') {
             try {
               const cred = await createUserWithEmailAndPassword(auth, email, password);
               const profile: UserProfile = {
                 uid: cred.user.uid,
-                name: 'Rongo Super Admin',
-                email: superAdminEmail,
+                name: emailLower === 'sashtick26@gmail.com' ? 'Sashtick Curator' : 'Rongo Super Admin',
+                email: emailLower,
                 role: 'superAdmin',
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 status: 'active',
+                profileImage: 'https://i.ibb.co/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
               };
               await setDoc(doc(db, 'users', cred.user.uid), profile);
               currentUserProfile = profile;
@@ -1091,7 +1101,7 @@ export const firebaseAuth = {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           status: 'active',
-          profileImage: 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
+          profileImage: 'https://i.ibb.co/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
         };
         if (!offlineFallback) {
           try {
@@ -1136,7 +1146,7 @@ export const firebaseAuth = {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         status: 'active',
-        profileImage: 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
+        profileImage: 'https://i.ibb.co/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
       };
       await setDoc(doc(db, 'users', cred.user.uid), profile);
 
@@ -1201,7 +1211,7 @@ export const firebaseAuth = {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         status: 'active',
-        profileImage: 'https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
+        profileImage: 'https://i.ibb.co/mV2JMRFb/Pngtree-default-male-avatar-5939655.png',
       };
       await setDoc(doc(db, 'users', cred.user.uid), profile);
 

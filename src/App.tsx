@@ -157,8 +157,8 @@ export default function App() {
       }
     }
     // Sync boutique counters whenever pages drift to inherit fresh edits
-    setStoreProducts(firestore.getProducts());
-    setStoreCollections(firestore.getCollections());
+    setStoreProducts((firestore.getProducts() || []).filter(p => p && p.id && p.image));
+    setStoreCollections((firestore.getCollections() || []).filter(c => c && c.id && c.image));
   }, [currentPage, currentUser]);
 
   // Dynamic SEO Page Title Orchestrator

@@ -37,6 +37,10 @@ service cloud.firestore {
              request.auth.uid == uid;
     }
 
+    function getOrder(orderId) {
+      return get(/databases/$(database)/documents/orders/$(orderId));
+    }
+
     // ------------------------
     // USERS
     // ------------------------
@@ -113,13 +117,23 @@ service cloud.firestore {
           &&
           resource.data.customerId ==
           request.auth.uid
+        )
+        ||
+        (
+          resource.data.customerId == "anonymous"
         );
 
       allow create:
-        if isSignedIn()
-        &&
-        request.resource.data.customerId ==
-        request.auth.uid;
+        if (
+          isSignedIn()
+          &&
+          request.resource.data.customerId ==
+          request.auth.uid
+        )
+        ||
+        (
+          request.resource.data.customerId == "anonymous"
+        );
 
       allow update:
         if isAdmin();
@@ -138,17 +152,37 @@ service cloud.firestore {
         if isAdmin()
         ||
         (
-          isSignedIn()
+          exists(/databases/$(database)/documents/orders/$(resource.data.orderId))
           &&
-          resource.data.customerId ==
-          request.auth.uid
+          (
+            (
+              isSignedIn()
+              &&
+              getOrder(resource.data.orderId).data.customerId == request.auth.uid
+            )
+            ||
+            (
+              getOrder(resource.data.orderId).data.customerId == "anonymous"
+            )
+          )
         );
 
       allow create:
-        if isSignedIn()
+        if request.resource.data.orderId is string
         &&
-        request.resource.data.customerId ==
-        request.auth.uid;
+        exists(/databases/$(database)/documents/orders/$(request.resource.data.orderId))
+        &&
+        (
+          (
+            isSignedIn()
+            &&
+            getOrder(request.resource.data.orderId).data.customerId == request.auth.uid
+          )
+          ||
+          (
+            getOrder(request.resource.data.orderId).data.customerId == "anonymous"
+          )
+        );
 
       allow update, delete:
         if isAdmin();

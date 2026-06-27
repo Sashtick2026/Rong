@@ -41,9 +41,8 @@ export const RegisterPage: React.FC<AuthPageProps> = ({ onSuccess, onClose, onAl
       return;
     }
 
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
-    if (!passwordRegex.test(password)) {
-      setError('Security requirement: Password must comprise at least 8 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#).');
+    if (password.length < 6) {
+      setError('Security requirement: Password must comprise at least 6 characters.');
       return;
     }
 

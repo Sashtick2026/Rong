@@ -25,7 +25,7 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
   const [email, setEmail] = useState(currentUser.email);
   const [phone, setPhone] = useState(currentUser.phone || '');
   const [address, setAddress] = useState(currentUser.address || '');
-  const [profileImage, setProfileImage] = useState('https://i.ibb.co.com/mV2JMRFb/Pngtree-default-male-avatar-5939655.png');
+  const [profileImage, setProfileImage] = useState('https://i.ibb.co/mV2JMRFb/Pngtree-default-male-avatar-5939655.png');
   
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
