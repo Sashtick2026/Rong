@@ -184,13 +184,7 @@ export const HeroInteractive: React.FC<HeroInteractiveProps> = ({
     >
       {/* Immersive Cinematic Background Video Layer */}
       <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0 bg-neutral-950">
-        <img 
-          src="https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=1600" 
-          alt="Weaving loom fallback"
-          className="absolute inset-0 w-full h-full object-cover opacity-45"
-        />
         <video 
-          poster="https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=1600"
           autoPlay
           loop
           muted
@@ -198,11 +192,7 @@ export const HeroInteractive: React.FC<HeroInteractiveProps> = ({
           className="absolute inset-0 w-full h-full object-cover opacity-85"
         >
           <source 
-            src="https://cdn.discordapp.com/attachments/1433397128155103307/1518495363756064799/Basic_Model-1782106795000.mp4?ex=6a40b802&is=6a3f6682&hm=a9981500ec004fa900e84a531dcabe79b98ce5f8b0311a83ffecbd9bc581d21c&"
-            type="video/mp4"
-          />
-          <source 
-            src="https://assets.mixkit.co/videos/preview/mixkit-weaving-loom-in-a-traditional-fabric-factory-40810-large.mp4"
+            src="https://res.cloudinary.com/dhs9tptrr/video/upload/v1782632581/Basic_Model-1782106795000_fl0zcr.mp4"
             type="video/mp4"
           />
         </video>

@@ -232,6 +232,7 @@ export const LoginPage: React.FC<LoginProps> = ({ onSuccess, onClose, onAltActio
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,7 +252,22 @@ export const LoginPage: React.FC<LoginProps> = ({ onSuccess, onClose, onAltActio
       const user = await firebaseAuth.login(email, password, rememberMe);
       onSuccess(user);
     } catch (err: any) {
-      setError(err?.message || 'Access coordinates denied.');
+      console.error('Login coordinate failure:', err);
+      const errMsg = (err?.message || '').toLowerCase();
+      if (
+        errMsg.includes('invalid-credential') ||
+        errMsg.includes('user-not-found') ||
+        errMsg.includes('wrong-password') ||
+        errMsg.includes('invalid-email') ||
+        errMsg.includes('auth/') ||
+        errMsg.includes('invalid id') ||
+        errMsg.includes('invalid credential') ||
+        errMsg.includes('incorrect')
+      ) {
+        setShowErrorPopup(true);
+      } else {
+        setError(err?.message || 'Access coordinates denied.');
+      }
     } finally {
       setLoading(false);
     }
@@ -261,6 +277,31 @@ export const LoginPage: React.FC<LoginProps> = ({ onSuccess, onClose, onAltActio
     <div className="max-w-md w-full mx-auto bg-brand-bg/95 border border-brand-clay/20 p-6 sm:p-10 rounded-3xl relative shadow-2xl font-sans" id="login-page-container">
       <CornerOrnament position="top-right" />
       <CornerOrnament position="bottom-left" />
+
+      {/* Access Error Modal Popup */}
+      {showErrorPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-brand-bg border border-brand-clay/30 max-w-sm w-full p-6 sm:p-8 rounded-2xl shadow-2xl relative font-sans text-center"
+          >
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-terracotta/10 text-brand-terracotta mb-4">
+              <AlertCircle className="w-6 h-6" />
+            </div>
+            <h3 className="font-serif text-lg font-bold text-brand-charcoal mb-2">Sign-In Failed</h3>
+            <p className="text-xs text-[#666666] leading-relaxed mb-6">
+              The email address or password you entered is incorrect. Please check your credentials and try again.
+            </p>
+            <button
+              onClick={() => setShowErrorPopup(false)}
+              className="w-full bg-brand-terracotta hover:bg-brand-charcoal text-brand-bg py-3 rounded-xl text-xs font-bold tracking-widest uppercase transition-colors duration-300 cursor-pointer"
+            >
+              Acknowledge & Retry
+            </button>
+          </motion.div>
+        </div>
+      )}
 
       <div className="absolute bottom-4 left-4 opacity-5 pointer-events-none">
         <AlpanaCircular size={150} />
